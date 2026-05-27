@@ -158,7 +158,7 @@ The system supports three distinct user roles (**Student**, **Organizer**, **Adm
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/campuscore.git
+git clone https://github.com/hemanthrajelangovan07-sudo/campuscore.git
 cd campuscore
 ```
 
@@ -271,9 +271,23 @@ campuscore/
 
 ## Database Models
 
-The application uses **13 SQLAlchemy models** backed by SQLite:
+The application uses **12 SQLAlchemy model classes + 1 raw association table = 13 tables** backed by SQLite:
 
-> *(Add your model names here — e.g.: `User`, `Event`, `Registration`, `Certificate`, `Notification`, `Category`, etc.)*
+| # | Model | File |
+|---|---|---|
+| 1 | `User` | `app/models/user.py` |
+| 2 | `Event` | `app/models/event.py` |
+| 3 | `Registration` | `app/models/registration.py` |
+| 4 | `Attendance` | `app/models/attendance.py` |
+| 5 | `Notification` | `app/models/notification.py` |
+| 6 | `Announcement` | `app/models/announcement.py` |
+| 7 | `Score` | `app/models/score.py` |
+| 8 | `Team` | `app/models/team.py` |
+| 9 | `UserSetting` | `app/models/user_setting.py` |
+| 10 | `SystemSetting` | `app/models/system_setting.py` |
+| 11 | `CertificateSignatory` | `app/models/certificate_signatory.py` |
+| 12 | `AuditLog` | `app/models/audit_log.py` |
+| — | `team_members` *(association table)* | `app/models/team.py` |
 
 Schema migrations are managed via **Flask-Migrate (Alembic)**, ensuring version-controlled, reproducible database changes.
 
@@ -281,11 +295,11 @@ Schema migrations are managed via **Flask-Migrate (Alembic)**, ensuring version-
 
 ## Author
 
-**[Your Name]**
+**Hemanth Raj**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://linkedin.com/in/yourprofile)
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/yourusername)
-[![Email](https://img.shields.io/badge/Email-Contact-EA4335?style=flat&logo=gmail)](mailto:your.email@gmail.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/hemanth-raj-21811b2b5)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/hemanthrajelangovan07-sudo)
+[![Email](https://img.shields.io/badge/Email-Contact-EA4335?style=flat&logo=gmail)](mailto:hemanthrajelangovan07@gmail.com)
 
 ---
 
