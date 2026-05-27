@@ -40,9 +40,9 @@ CampusCore is a fully functional, end-to-end college event management platform t
 
 The system supports three distinct user roles (**Student**, **Organizer**, **Admin**), each with a tailored dashboard experience. It integrates Google OAuth 2.0 for frictionless authentication, WebSocket-powered live updates for real-time interactivity, and a dual email pipeline using both Flask-Mail and a dedicated Node.js microservice.
 
-> **Screenshots** — *(add 2–3 screenshots of your UI here)*
-
----
+> **Screenshots** — <img width="1920" height="1080" alt="20260527135509" src="https://github.com/user-attachments/assets/8f99441f-b350-4eea-88e3-3401fcccd5d5" />
+<img width="1920" height="1080" alt="20260527135402" src="https://github.com/user-attachments/assets/1d88a3d2-9a7b-4f03-bf97-855d290a6740" />
+<img width="1920" height="1080" alt="20260527135446" src="https://github.com/user-attachments/assets/a1be0b60-48eb-4792-a162-5a5b455ae003" />
 
 ## Features
 
