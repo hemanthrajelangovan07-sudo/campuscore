@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}<i class="fas fa-th-large"></i> Dashboard{% endblock %}
+
+{% block content %}
+<div class="org-welcome" style="background: linear-gradient(135deg, #16a34a, #0f766e); color: white; border-radius: var(--radius); padding: 32px; margin-bottom: 24px;">
+  <h1 style="font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 6px;">Welcome to the admin dashboard, {{ user.first_name or user.name.split()[0] }}!</h1>
+  <p style="opacity: 0.85; font-size: 0.9rem;">Manage the campus, create events, and oversee all activities.</p>
+</div>
+
+<div class="quick-actions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 28px;">
+  <div class="card" style="padding: 24px;">
+    <div style="font-size: 2rem; color: #16a34a; margin-bottom: 12px;"><i class="fas fa-plus-circle"></i></div>
+    <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">Create Event</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Create a new event, set up registration, and publish it to participants.</p>
+    <a href="{{ url_for('create_event') }}" class="btn" style="background: #16a34a; color: white;">Create New Event</a>
+  </div>
+  <div class="card" style="padding: 24px;">
+    <div style="font-size: 2rem; color: #2563eb; margin-bottom: 12px;"><i class="fas fa-calendar"></i></div>
+    <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">All Events</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">View and manage all campus events, track registrations, and update details.</p>
+    <a href="{{ url_for('admin_events') }}" class="btn" style="background: #2563eb; color: white;">Manage Events</a>
+  </div>
+  <div class="card" style="padding: 24px;">
+    <div style="font-size: 2rem; color: #d97706; margin-bottom: 12px;"><i class="fas fa-bullhorn"></i></div>
+    <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">Announcements</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Create and send announcements to all students and organizers.</p>
+    <a href="{{ url_for('admin_announcements.announcements') }}" class="btn" style="background: #d97706; color: white;">Create Announcement</a>
+  </div>
+</div>
+
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
+    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_events }}</span>
+      <span class="stat-label">Total Events</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #22c55e);">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ total_registrations }}</span>
+      <span class="stat-label">Total Registrations</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, #9333ea, #a855f7);">
+    <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ active_events }}</span>
+      <span class="stat-label">Active Events</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card" style="background: linear-gradient(135deg, #0d9488, #14b8a6);">
+    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ upcoming_count }}</span>
+      <span class="stat-label">Upcoming Events</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-calendar-check"></i> Upcoming Events</h3>
+    <a href="{{ url_for('admin_events') }}" class="card-link">View all</a>
+  </div>
+  {% if events %}
+  <div class="event-list">
+    {% set ns = namespace(shown=false) %}
+    {% for event in events %}
+      {% if event.date >= today %}
+        {% set ns.shown = true %}
+        {% if event.date < tomorrow %}
+          {% set status = 'Active' %}
+          {% set status_class = 'badge-registered' %}
+        {% else %}
+          {% set status = 'Upcoming' %}
+          {% set status_class = 'badge-today' %}
+        {% endif %}
+        <div class="event-row">
+          <div class="event-date-badge">
+            <span class="edb-day">{{ event.date.strftime('%d') }}</span>
+            <span class="edb-mon">{{ event.date.strftime('%b') }}</span>
+          </div>
+          <div class="event-row-info">
+            <strong>{{ event.title[:50] ~ '...' if event.title|length > 50 else event.title }}</strong>
+            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue or 'TBA' }}</span>
+          </div>
+          <span class="badge {{ status_class }}">{{ status }}</span>
+          <a href="{{ url_for('manage_attendance', event_id=event.id) }}" class="btn btn-sm btn-outline">View details</a>
+        </div>
+      {% endif %}
+    {% endfor %}
+    {% if not ns.shown %}
+      <div class="empty-state"><i class="fas fa-calendar-times"></i><p>No upcoming events.</p><a href="{{ url_for('create_event') }}" class="btn btn-sm btn-primary">Create your first event</a></div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events yet.</p><a href="{{ url_for('create_event') }}" class="btn btn-sm btn-primary">Create your first event</a></div>
+  {% endif %}
+</div>
+{% endblock %}

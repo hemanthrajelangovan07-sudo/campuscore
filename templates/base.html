@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}CampusCore{% endblock %} — SIST</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}app-body{% endblock %}">
+
+{% if session.get('user_id') %}
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="{{ url_for('static', filename='images/sist_logo.png') }}" alt="SIST Logo" class="sidebar-logo-img"/>
+    <div class="sidebar-logo-text">
+      <span class="logo-title">CampusCore</span>
+      <span class="logo-sub">SIST Portal</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if session.get('role') == 'admin' %}
+    <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+      <i class="fas fa-th-large"></i><span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('admin_users') }}" class="nav-item {% if request.endpoint in ('admin_users', 'admin_create_user', 'admin_edit_user') %}active{% endif %}">
+      <i class="fas fa-users-gear"></i><span>Users</span>
+    </a>
+    <a href="{{ url_for('admin_events') }}" class="nav-item {% if 'event' in request.endpoint or request.endpoint == 'create_event' %}active{% endif %}">
+      <i class="fas fa-calendar-alt"></i><span>Events</span>
+    </a>
+    <a href="{{ url_for('admin_announcements.announcements') }}" class="nav-item {% if 'admin_announcements' in (request.endpoint or '') %}active{% endif %}">
+      <i class="fas fa-bullhorn"></i><span>Announcements</span>
+      <span class="nav-unread-badge ann-nav-badge" style="display:none;"></span>
+    </a>
+    <a href="{{ url_for('admin_analytics.analytics') }}" class="nav-item {% if request.endpoint == 'admin_analytics.analytics' %}active{% endif %}">
+      <i class="fas fa-chart-bar"></i><span>Analytics</span>
+    </a>
+    <a href="{{ url_for('admin_user_settings') }}" class="nav-item {% if request.endpoint in ('admin_user_settings', 'admin_profile') %}active{% endif %}">
+      <i class="fas fa-sliders-h"></i><span>My Settings</span>
+    </a>
+    {% elif session.get('role') == 'organizer' %}
+    <a href="{{ url_for('organizer_dashboard') }}" class="nav-item {% if request.endpoint == 'organizer_dashboard' %}active{% endif %}">
+      <i class="fas fa-th-large"></i><span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('organizer_events') }}" class="nav-item {% if request.endpoint == 'organizer_events' %}active{% endif %}">
+      <i class="fas fa-calendar-alt"></i><span>Events</span>
+    </a>
+    <a href="{{ url_for('organizer_announcements') }}" class="nav-item {% if request.endpoint == 'organizer_announcements' %}active{% endif %}">
+      <i class="fas fa-bullhorn"></i><span>Announcements</span>
+      <span class="nav-unread-badge ann-nav-badge" style="display:none;"></span>
+    </a>
+    <a href="{{ url_for('organizer_user_settings') }}" class="nav-item {% if request.endpoint == 'organizer_user_settings' %}active{% endif %}">
+      <i class="fas fa-sliders-h"></i><span>My Settings</span>
+    </a>
+    <a href="{{ url_for('organizer_analytics') }}" class="nav-item {% if request.endpoint == 'organizer_analytics' %}active{% endif %}">
+      <i class="fas fa-chart-bar"></i><span>Analytics</span>
+    </a>
+    {% else %}
+    <a href="{{ url_for('student_dashboard') }}" class="nav-item {% if request.endpoint == 'student_dashboard' %}active{% endif %}">
+      <i class="fas fa-th-large"></i><span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('student_events') }}" class="nav-item {% if request.endpoint in ('student_events', 'student_event_detail') %}active{% endif %}">
+      <i class="fas fa-calendar-alt"></i><span>Browse Events</span>
+    </a>
+    <a href="{{ url_for('my_events') }}" class="nav-item {% if request.endpoint == 'my_events' %}active{% endif %}">
+      <i class="fas fa-ticket-alt"></i><span>My Events</span>
+    </a>
+    <a href="{{ url_for('student_announcements.announcements') }}" class="nav-item {% if 'student_announcements' in (request.endpoint or '') %}active{% endif %}">
+      <i class="fas fa-bullhorn"></i><span>Announcements</span>
+      <span class="nav-unread-badge ann-nav-badge" style="display:none;"></span>
+    </a>
+    <a href="{{ url_for('student_settings') }}" class="nav-item {% if request.endpoint == 'student_settings' %}active{% endif %}">
+      <i class="fas fa-cog"></i><span>Settings</span>
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ session.get('user_name', 'U')[0].upper() }}</div>
+      <div class="user-details">
+        <span class="user-name">{{ session.get('user_name', 'User') }}</span>
+        <span class="user-role">{{ session.get('role', 'student').title() }}</span>
+      </div>
+    </div>
+    <a href="{{ url_for('logout') }}" class="logout-btn" title="Logout">
+      <i class="fas fa-sign-out-alt"></i>
+    </a>
+  </div>
+</aside>
+
+<!-- Main content -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+    <div class="topbar-actions">
+      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode"><i class="fas fa-moon"></i></button>
+      <div class="notif-wrapper">
+        <button class="icon-btn" id="notifBtn"><i class="fas fa-bell"></i><span class="notif-badge" id="notifCount" style="display:none"></span></button>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-header">Notifications</div>
+          <div id="notifList"><p class="notif-empty">Loading...</p></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for cat, msg in messages %}
+            <div class="flash flash-{{ cat }}">
+              <i class="fas fa-{% if cat == 'success' %}check-circle{% elif cat == 'danger' %}exclamation-circle{% elif cat == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+              {{ msg }}
+              <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+(function() {
+  const toggle = document.getElementById('themeToggle');
+  const icon = toggle?.querySelector('i');
+  const saved = localStorage.getItem('campuscore-theme') || '{{ theme_preference }}';
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (icon) { icon.className = 'fas fa-sun'; }
+  }
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('campuscore-theme', 'light');
+        if (icon) icon.className = 'fas fa-moon';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('campuscore-theme', 'dark');
+        if (icon) icon.className = 'fas fa-sun';
+      }
+      navigator.sendBeacon('/api/settings', new Blob([JSON.stringify({theme: next})], {type: 'application/json'}));
+    });
+  }
+})();
+</script>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+window.escHtml = function(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+};
+</script>
+
+<style>
+  .ann-banner {
+    position      : fixed;
+    top           : 76px;
+    right         : 20px;
+    z-index       : 9999;
+    width         : 380px;
+    background    : var(--white);
+    border-radius : 14px;
+    box-shadow    : var(--card-shadow);
+    border        : 1px solid var(--border);
+    overflow      : hidden;
+    animation     : bannerIn .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .ann-banner-stripe {
+    height : 4px;
+    width  : 100%;
+  }
+  .ann-banner-body {
+    padding : 1rem 1.1rem;
+  }
+  .ann-banner-title {
+    font-size   : .8rem;
+    font-weight : 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom : .25rem;
+  }
+  .ann-banner-msg {
+    font-size  : .9rem;
+    color      : var(--text);
+    font-weight: 500;
+    margin     : 0 0 .35rem;
+    line-height: 1.45;
+  }
+  .ann-banner-meta {
+    font-size : .75rem;
+    color     : var(--text-muted);
+  }
+  .ann-banner-close {
+    position   : absolute;
+    top        : 10px;
+    right      : 10px;
+    background : none;
+    border     : none;
+    color      : var(--text-muted);
+    cursor     : pointer;
+    font-size  : .85rem;
+    padding    : 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+  .ann-banner-close:hover { color: var(--text); }
+
+  @keyframes bannerIn {
+    from { opacity:0; transform:translateX(20px) scale(.96); }
+    to   { opacity:1; transform:translateX(0)    scale(1); }
+  }
+
+  .nav-unread-badge {
+    display       : inline-flex;
+    align-items   : center;
+    justify-content: center;
+    min-width     : 18px;
+    height        : 18px;
+    border-radius : 9px;
+    background    : var(--red);
+    color         : #fff;
+    font-size     : .65rem;
+    font-weight   : 700;
+    padding       : 0 4px;
+    margin-left   : auto;
+    line-height   : 1;
+  }
+  .nav-link:has(.nav-unread-badge) { justify-content: flex-start; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  const PRIORITY_COLOUR = {
+    info    : '#4f6ef7',
+    warning : '#f59e0b',
+    urgent  : '#ef4444',
+  };
+
+  const socket = window._socket = io({ transports: ['websocket', 'polling'] });
+
+  let unread = parseInt(sessionStorage.getItem('ann_unread') || '0', 10);
+
+  function updateBadge(delta) {
+    unread = Math.max(0, unread + delta);
+    sessionStorage.setItem('ann_unread', unread);
+    renderBadge();
+  }
+
+  function renderBadge() {
+    document.querySelectorAll('.ann-nav-badge').forEach(el => {
+      el.textContent = unread > 0 ? (unread > 99 ? '99+' : unread) : '';
+      el.style.display = unread > 0 ? 'inline-flex' : 'none';
+    });
+  }
+
+  if (/\/announcements/.test(window.location.pathname)) {
+    unread = 0;
+    sessionStorage.setItem('ann_unread', '0');
+  }
+  renderBadge();
+
+  socket.on('new_announcement', function (data) {
+    showBanner(data);
+    if (!/\/announcements/.test(window.location.pathname)) {
+      updateBadge(+1);
+    }
+  });
+
+  let bannerQueue = [];
+  let bannerShowing = false;
+
+  function showBanner(data) {
+    bannerQueue.push(data);
+    if (!bannerShowing) processQueue();
+  }
+
+  function processQueue() {
+    if (bannerQueue.length === 0) { bannerShowing = false; return; }
+    bannerShowing = true;
+    const data = bannerQueue.shift();
+    renderBanner(data, processQueue);
+  }
+
+  function renderBanner(data, onDone) {
+    const colour = PRIORITY_COLOUR[data.priority] || '#4f6ef7';
+    const el = document.createElement('div');
+    el.className = 'ann-banner';
+    el.setAttribute('role', 'alert');
+    el.innerHTML = `
+      <div class="ann-banner-stripe" style="background:${esc(colour)}"></div>
+      <div class="ann-banner-body">
+        <p class="ann-banner-title" style="color:${esc(colour)}">
+          <i class="fas fa-bullhorn me-1"></i>${esc(data.priority_label)} Announcement
+        </p>
+        <p class="ann-banner-msg">${esc(data.message)}</p>
+        <span class="ann-banner-meta">
+          <i class="far fa-clock me-1"></i>${esc(data.time)}
+          &nbsp;·&nbsp;
+          <i class="far fa-user me-1"></i>${esc(data.author)}
+        </span>
+      </div>
+      <button class="ann-banner-close" aria-label="Dismiss">
+        <i class="fas fa-xmark"></i>
+      </button>`;
+
+    document.body.appendChild(el);
+
+    el.querySelector('.ann-banner-close').addEventListener('click', () => dismiss(el, onDone));
+
+    const timer = setTimeout(() => dismiss(el, onDone), 9000);
+
+    function dismiss(node, cb) {
+      clearTimeout(timer);
+      node.style.transition = 'opacity .3s, transform .3s';
+      node.style.opacity = '0';
+      node.style.transform = 'translateX(20px)';
+      setTimeout(() => { node.remove(); cb(); }, 300);
+    }
+  }
+
+  // ── Personal notifications (event created, attendance marked) ────────
+  socket.on('notification:new', function (data) {
+    updateNotifBadge();
+    showNotifToast(data);
+  });
+
+  socket.on('notification', function (data) {
+    showToast(data.title, data.body, data.type);
+  });
+
+  function showToast(title, body, type) {
+    const accent = {
+      event_created:      '#3b82f6',
+      attendance_marked:  '#10b981',
+    }[type] || '#6b7280';
+
+    const container = document.createElement('div');
+    container.className = 'position-fixed p-3';
+    container.style.cssText = 'bottom:20px;right:20px;z-index:9999;min-width:300px;';
+    container.innerHTML = `
+      <div class="toast show shadow" role="alert"
+           style="background:var(--white);border-left:4px solid ${accent};border-radius:10px;">
+        <div class="toast-header border-0 pb-0" style="background:transparent;">
+          <span class="me-auto fw-semibold" style="color:${accent}">${esc(title)}</span>
+          <button type="button" class="btn-close btn-close-sm"
+                  onclick="this.closest('.position-fixed').remove()"></button>
+        </div>
+        <div class="toast-body pt-1 text-muted small" style="background:transparent;">${esc(body)}</div>
+      </div>`;
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 7_000);
+  }
+
+  function updateNotifBadge() {
+    fetch('/api/notifications/unread-count')
+      .then(r => r.json())
+      .then(d => {
+        const badge = document.getElementById('notifCount');
+        if (d.count > 0) { badge.textContent = d.count; badge.style.display = 'flex'; }
+        else badge.style.display = 'none';
+      }).catch(() => {});
+  }
+
+  function showNotifToast(data) {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--white);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border-left:4px solid var(--navy);z-index:9999;max-width:360px;animation:slideIn 0.3s ease;';
+    toast.innerHTML = '<strong style="font-size:0.9rem;color:var(--text);">' + esc(data.title || 'Notification') + '</strong><p style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">' + esc(data.message || '') + '</p>';
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; setTimeout(() => toast.remove(), 500); }, 5000);
+  }
+
+  updateNotifBadge();
+  setInterval(updateNotifBadge, 30000);
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

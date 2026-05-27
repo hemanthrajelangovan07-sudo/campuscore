@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if event else 'Create' }} Event{% endblock %}
+{% block page_title %}<i class="fas fa-calendar-plus"></i> {{ 'Edit' if event else 'Create' }} Event{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">{{ 'Edit Event' if event else 'Create New Event' }}</h1>
+    <p class="page-sub">{{ 'Update the event details below.' if event else 'Fill in the details to create a new event.' }}</p>
+  </div>
+  <a href="{{ url_for('organizer_events') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Events</a>
+</div>
+
+<div class="card form-card">
+  <form method="POST" class="event-form" id="eventForm" enctype="multipart/form-data" onsubmit="return validateEventForm()" data-skip-validation="0">
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</h4>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Event Title *</label>
+        <input type="text" name="title" id="ev_title" value="{{ event.title if event else '' }}" placeholder="Tech Conference 2023" required/>
+        <small class="field-error" id="title_error" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Title is required</small>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Description *</label>
+        <textarea name="description" id="ev_desc" rows="4" placeholder="Provide details about speakers, topics, etc." required>{{ event.description if event else '' }}</textarea>
+        <small class="field-error" id="desc_error" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Description is required</small>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-clock"></i> Schedule & Location</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date *</label>
+          <input type="date" name="date" id="ev_date" value="{{ event.date.strftime('%Y-%m-%d') if event else '' }}" required/>
+          <small class="field-error" id="date_error" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Date is required</small>
+        </div>
+        <div class="form-group">
+          <label>Time *</label>
+          <input type="time" name="time" id="ev_time" value="{{ event_time if event_time else '' }}" required/>
+          <small class="field-error" id="time_error" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Time is required</small>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Location *</label>
+          <input type="text" name="venue" id="ev_venue" value="{{ event.venue if event else '' }}" placeholder="Building name, room number, or online platform" required/>
+          <small class="field-error" id="venue_error" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Location is required</small>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;background:var(--bg);color:var(--text);">
+            <option value="General" {% if event and event.category == 'General' %}selected{% endif %}>General</option>
+            <option value="Technical" {% if event and event.category == 'Technical' %}selected{% endif %}>Technical</option>
+            <option value="Cultural" {% if event and event.category == 'Cultural' %}selected{% endif %}>Cultural</option>
+            <option value="Sports" {% if event and event.category == 'Sports' %}selected{% endif %}>Sports</option>
+            <option value="Workshop" {% if event and event.category == 'Workshop' %}selected{% endif %}>Workshop</option>
+            <option value="Seminar" {% if event and event.category == 'Seminar' %}selected{% endif %}>Seminar</option>
+            <option value="Competition" {% if event and event.category == 'Competition' %}selected{% endif %}>Competition</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Capacity *</label>
+          <input type="number" name="max_participants" value="{{ event.max_participants if event else 50 }}" min="1" max="5000"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-tags"></i> Tags & Media</h4>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Tags</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="tagInput" placeholder="Type a tag and press Enter" style="flex: 1;"/>
+          <button type="button" class="btn btn-outline" onclick="addTag()">Add</button>
+        </div>
+        <input type="hidden" name="tags" id="tagsHidden" value="{{ tags|join(',') if tags else '' }}"/>
+        <div id="tagContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+          {% if tags %}
+            {% for tag in tags %}
+            <span class="tag-pill" style="display: inline-flex; align-items: center; gap: 4px; background: #eef2ff; color: #4338ca; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 500;">
+              {{ tag }}
+              <button type="button" onclick="removeTag(this)" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; color: #4338ca; padding: 0; line-height: 1;">&times;</button>
+            </span>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Image URL</label>
+        <input type="text" name="image_url" value="{{ event.image_url if event else '' }}" placeholder="https://example.com/image.jpg"/>
+        <small style="color: var(--text-muted); font-size: 0.78rem;">URL to an image (not file upload)</small>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-file-pdf" style="width:16px;color:var(--primary);"></i> Event Brochure (PDF)</label>
+        <div class="pdf-upload-area" id="pdfDropArea" style="border: 2px dashed var(--border); border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-secondary);">
+          <div id="pdfPlaceholder">
+            <i class="fas fa-file-pdf" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px; display: block;"></i>
+            <p style="margin: 0 0 4px; font-weight: 500; color: var(--text);">Drop a PDF here or click to browse</p>
+            <small style="color: var(--text-muted);">Maximum file size: 16 MB</small>
+          </div>
+          <div id="pdfFileInfo" style="display: none;">
+            <i class="fas fa-file-pdf" style="font-size: 1.8rem; color: #dc2626; margin-bottom: 6px; display: block;"></i>
+            <p id="pdfFileName" style="margin: 0 0 4px; font-weight: 600; color: var(--text);"></p>
+            <small id="pdfFileSize" style="color: var(--text-muted); display: block; margin-bottom: 8px;"></small>
+            <button type="button" class="btn btn-outline" onclick="clearPdfUpload()" style="font-size: 0.78rem;"><i class="fas fa-times"></i> Remove</button>
+          </div>
+          {% if event and event.pdf_file %}
+          <div id="existingPdfInfo" style="margin-top: 8px; padding: 12px; background: var(--bg); border-radius: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+              <i class="fas fa-file-pdf" style="font-size: 1.2rem; color: #dc2626;"></i>
+              <span style="font-weight: 500;">{{ event.pdf_file.split('--',1)[1] if '--' in event.pdf_file else event.pdf_file }}</span>
+              <a href="{{ url_for('static', filename='uploads/' + event.pdf_file) }}" target="_blank" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem; text-decoration: none;"><i class="fas fa-external-link-alt"></i> View</a>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 8px; cursor: pointer; font-size: 0.78rem; color: var(--red);">
+              <input type="checkbox" name="remove_pdf" value="1" onclick="document.getElementById('eventForm').dataset.skipValidation='1'" onchange="document.getElementById('eventForm').submit()"/>
+              Remove this PDF
+            </label>
+          </div>
+          {% endif %}
+        </div>
+        <input type="file" name="pdf_file" id="pdfInput" accept=".pdf,application/pdf" style="display: none;"/>
+        <small style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; display: block;">Upload a PDF brochure or information sheet for this event</small>
+      </div>
+    </div>
+
+    <div class="form-section" id="signatorySection">
+      <h4 class="form-section-title"><i class="fas fa-signature"></i> Certificate Signatories</h4>
+      {% if event and event.id %}
+      <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 12px;">
+        Add signatories whose names and signatures will appear on certificates generated for this event.
+      </p>
+      <div id="signatoryList" style="margin-bottom: 12px;">
+        {% if event.signatories %}
+          {% for sig in event.signatories|sort(attribute='ordering') %}
+          <div class="signatory-item" data-id="{{ sig.id }}" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;">
+            <div style="flex: 1;">
+              <strong>{{ sig.name }}</strong>
+              <span style="color: var(--text-muted); font-size: 0.85rem;"> — {{ sig.title }}</span>
+              {% if sig.signature_image %}
+              <span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #d1fae5; color: #065f46; border-radius: 999px; font-size: 0.75rem;">&#10003; Signature</span>
+              {% endif %}
+            </div>
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem; color: var(--red); border-color: var(--red);" onclick="removeSignatory({{ sig.id }})"><i class="fas fa-trash"></i></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="sigName" placeholder="Signatory Name" style="flex: 2; min-width: 160px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.85rem; background: var(--bg); color: var(--text);"/>
+        <input type="text" id="sigTitle" placeholder="Title (e.g. Vice Chancellor)" style="flex: 2; min-width: 160px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.85rem; background: var(--bg); color: var(--text);"/>
+        <input type="file" id="sigImageInput" accept="image/png,image/jpeg,image/gif" style="display: none;"/>
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('sigImageInput').click()" style="white-space: nowrap;"><i class="fas fa-image"></i> Upload Signature</button>
+        <button type="button" class="btn btn-primary" onclick="addSignatory()" style="white-space: nowrap;"><i class="fas fa-plus"></i> Add</button>
+      </div>
+      <small id="sigNameError" style="color: var(--red); display: none; font-size: 0.78rem; margin-top: 4px;">Name is required</small>
+      {% else %}
+      <p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Save the event first, then you can manage certificate signatories.</p>
+      {% endif %}
+    </div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('organizer_events') }}" class="btn btn-ghost"><i class="fas fa-times"></i> Cancel</a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-{{ 'save' if event else 'plus-circle' }}"></i>
+        {{ 'Update Event' if event else 'Create Event' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+.pdf-upload-area:hover {
+  border-color: var(--primary) !important;
+  background: #f8faff !important;
+}
+.pdf-upload-area.dragover {
+  border-color: var(--primary) !important;
+  background: #eef2ff !important;
+}
+</style>
+
+<script>
+const pdfInput = document.getElementById('pdfInput');
+const pdfDropArea = document.getElementById('pdfDropArea');
+const pdfPlaceholder = document.getElementById('pdfPlaceholder');
+const pdfFileInfo = document.getElementById('pdfFileInfo');
+const pdfFileName = document.getElementById('pdfFileName');
+const pdfFileSize = document.getElementById('pdfFileSize');
+
+pdfDropArea.addEventListener('click', () => pdfInput.click());
+pdfInput.addEventListener('change', handlePdfFile);
+
+pdfDropArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  pdfDropArea.classList.add('dragover');
+});
+pdfDropArea.addEventListener('dragleave', () => {
+  pdfDropArea.classList.remove('dragover');
+});
+pdfDropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  pdfDropArea.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    pdfInput.files = e.dataTransfer.files;
+    handlePdfFile();
+  }
+});
+
+function handlePdfFile() {
+  const file = pdfInput.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') {
+    alert('Please select a PDF file.');
+    pdfInput.value = '';
+    return;
+  }
+  if (file.size > 16 * 1024 * 1024) {
+    alert('File is too large. Maximum size is 16 MB.');
+    pdfInput.value = '';
+    return;
+  }
+  pdfPlaceholder.style.display = 'none';
+  document.getElementById('existingPdfInfo')?.remove();
+  pdfFileInfo.style.display = 'block';
+  pdfFileName.textContent = file.name;
+  pdfFileSize.textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function clearPdfUpload() {
+  pdfInput.value = '';
+  pdfFileInfo.style.display = 'none';
+  pdfPlaceholder.style.display = 'block';
+}
+
+let tags = [{{ tags|map('tojson')|join(',') if tags else '' }}];
+
+function addTag() {
+  const input = document.getElementById('tagInput');
+  const tag = input.value.trim();
+  if (tag && !tags.includes(tag)) {
+    tags.push(tag);
+    renderTags();
+    input.value = '';
+  }
+}
+
+function removeTag(btn) {
+  const pill = btn.parentElement;
+  const tag = pill.textContent.trim().replace('×', '').trim();
+  tags = tags.filter(t => t !== tag);
+  renderTags();
+}
+
+function renderTags() {
+  const container = document.getElementById('tagContainer');
+  const hidden = document.getElementById('tagsHidden');
+  container.innerHTML = tags.map(t =>
+    `<span class="tag-pill" style="display: inline-flex; align-items: center; gap: 4px; background: #eef2ff; color: #4338ca; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 500;">
+      ${t}
+      <button type="button" onclick="removeTag(this)" style="background: none; border: none; cursor: pointer; font-size: 0.85rem; color: #4338ca; padding: 0; line-height: 1;">&times;</button>
+    </span>`
+  ).join('');
+  hidden.value = tags.join(',');
+}
+
+document.getElementById('tagInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTag();
+  }
+});
+
+function validateEventForm() {
+  if (document.getElementById('eventForm').dataset.skipValidation === '1') return true;
+  let valid = true;
+  const fields = [
+    { id: 'ev_title', error: 'title_error' },
+    { id: 'ev_desc', error: 'desc_error' },
+    { id: 'ev_date', error: 'date_error' },
+    { id: 'ev_time', error: 'time_error' },
+    { id: 'ev_venue', error: 'venue_error' },
+  ];
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    const err = document.getElementById(f.error);
+    if (!el.value.trim()) {
+      err.style.display = 'block';
+      el.style.borderColor = '#dc2626';
+      valid = false;
+      el.addEventListener('input', function handler() {
+        el.style.borderColor = '';
+        err.style.display = 'none';
+        el.removeEventListener('input', handler);
+      });
+    } else {
+      err.style.display = 'none';
+    }
+  });
+  return valid;
+}
+
+let sigImageFile = null;
+document.getElementById('sigImageInput').addEventListener('change', function(e) {
+  sigImageFile = e.target.files[0];
+});
+
+function addSignatory() {
+  const name = document.getElementById('sigName').value.trim();
+  const title = document.getElementById('sigTitle').value.trim();
+  const errEl = document.getElementById('sigNameError');
+  if (!name) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('title', title || 'Event Coordinator');
+  if (sigImageFile) {
+    formData.append('signature_image', sigImageFile);
+  }
+  formData.append('ordering', document.querySelectorAll('.signatory-item').length);
+  fetch('/api/events/{{ event.id if event else 0 }}/signatories/add', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { alert(data.error); return; }
+      const list = document.getElementById('signatoryList');
+      const div = document.createElement('div');
+      div.className = 'signatory-item';
+      div.dataset.id = data.id;
+      div.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;';
+      div.innerHTML = '<div style="flex: 1;"><strong>' + data.name + '</strong><span style="color: var(--text-muted); font-size: 0.85rem;"> — ' + data.title + '</span>' + (data.signature_image ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: #d1fae5; color: #065f46; border-radius: 999px; font-size: 0.75rem;">&#10003; Signature</span>' : '') + '</div><button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem; color: var(--red); border-color: var(--red);" onclick="removeSignatory(' + data.id + ')"><i class="fas fa-trash"></i></button>';
+      list.appendChild(div);
+      document.getElementById('sigName').value = '';
+      document.getElementById('sigTitle').value = '';
+      sigImageFile = null;
+      document.getElementById('sigImageInput').value = '';
+    })
+    .catch(() => alert('Failed to add signatory.'));
+}
+
+function removeSignatory(id) {
+  if (!confirm('Remove this signatory?')) return;
+  fetch('/api/events/{{ event.id if event else 0 }}/signatories/' + id + '/remove', { method: 'POST' })
+    .then(r => r.json())
+    .then(() => {
+      const item = document.querySelector('.signatory-item[data-id="' + id + '"]');
+      if (item) item.remove();
+    })
+    .catch(() => alert('Failed to remove signatory.'));
+}
+</script>
+{% endblock %}

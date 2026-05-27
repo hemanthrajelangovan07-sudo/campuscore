@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Browse Events{% endblock %}
+{% block page_title %}<i class="fas fa-calendar-alt"></i> Events{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Events</h1>
+    <p class="page-sub">Browse and register for events</p>
+  </div>
+</div>
+
+<div class="tab-bar" style="display: flex; gap: 4px; margin-bottom: 20px; background: var(--white); border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border);">
+  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">All Events</a>
+  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
+  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Past</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="input-wrap search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" name="search" placeholder="Search events..." value="{{ search }}"/>
+    </div>
+    <select name="category" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline">Filter</button>
+    {% if search or selected_category %}
+      <a href="?tab={{ tab }}" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if events %}
+<div class="events-grid">
+  {% for event in events %}
+  <div class="event-card {% if event.id in registered_ids %}event-registered{% endif %}" data-event-id="{{ event.id }}" data-max="{{ event.max_participants }}">
+    <div class="event-card-header">
+      <span class="badge badge-cat">{{ event.category }}</span>
+      {% if event.date < today %}
+        <span class="badge badge-past">Past</span>
+      {% elif event.date == today %}
+        <span class="badge badge-today">Active</span>
+      {% endif %}
+      {% if event.id in registered_ids %}
+        <span class="badge badge-registered"><i class="fas fa-check"></i> Registered</span>
+      {% endif %}
+    </div>
+    {% if event.image_url %}
+    <div style="margin-bottom: 12px; border-radius: 8px; overflow: hidden; max-height: 180px;">
+      <img src="{{ event.image_url }}" alt="{{ event.title }}" style="width: 100%; height: 180px; object-fit: cover;">
+    </div>
+    {% endif %}
+    <h3 class="event-card-title">{{ event.title }}</h3>
+    <p class="event-card-desc">{{ event.description[:120] ~ '...' if event.description and event.description|length > 120 else event.description }}</p>
+    <div class="event-card-meta">
+      <span><i class="fas fa-calendar"></i> {{ event.date.strftime('%d %B %Y') }}</span>
+      {% if event.time %}<span><i class="fas fa-clock"></i> {{ event.time }}</span>{% endif %}
+      {% if event.venue %}<span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>{% endif %}
+      {% if event.organizer_name %}<span><i class="fas fa-user"></i> {{ event.organizer_name }}</span>{% endif %}
+    </div>
+    <div class="event-card-footer">
+      <div class="seat-info">
+        <div class="seat-bar">
+          <div class="seat-fill" style="width: {{ [((reg_counts.get(event.id, 0) / (event.max_participants or 1)) * 100)|int, 100]|min }}%"></div>
+        </div>
+        <span>{{ reg_counts.get(event.id, 0) }}/{{ event.max_participants }} seats</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        {% if event.pdf_file %}
+        <a href="{{ url_for('static', filename='uploads/' + event.pdf_file) }}" target="_blank" class="btn btn-sm btn-outline" style="border-color:var(--red);color:var(--red);"><i class="fas fa-file-pdf"></i> Brochure</a>
+        {% endif %}
+        {% if event.id in registered_ids %}
+        <button class="btn btn-sm btn-ghost" disabled><i class="fas fa-check"></i> Registered</button>
+        {% elif reg_counts.get(event.id, 0) >= event.max_participants %}
+        <button class="btn btn-sm btn-ghost" disabled>Full</button>
+        {% else %}
+        <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}">
+          <button type="submit" class="btn btn-sm btn-primary">Register</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events found</p></div></div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+  var socket = window._socket;
+  if (!socket) return;
+
+  var eventIds = [];
+  document.querySelectorAll('.event-card[data-event-id]').forEach(function(el) {
+    eventIds.push(el.dataset.eventId);
+  });
+
+  if (socket.connected) {
+    eventIds.forEach(function(id) {
+      socket.emit('join_event_room', { event_id: parseInt(id) });
+    });
+  } else {
+    socket.on('connect', function() {
+      eventIds.forEach(function(id) {
+        socket.emit('join_event_room', { event_id: parseInt(id) });
+      });
+    });
+  }
+
+  socket.on('participant:registered', function(data) {
+    var card = document.querySelector('.event-card[data-event-id="' + data.event_id + '"]');
+    if (!card) return;
+    var seatSpan = card.querySelector('.seat-info span');
+    var seatFill = card.querySelector('.seat-fill');
+    var max = parseInt(card.dataset.max);
+    if (!seatSpan) return;
+    var parts = seatSpan.textContent.trim().split('/');
+    var cur = parseInt(parts[0]) || 0;
+    var next = cur + 1;
+    seatSpan.textContent = next + '/' + max;
+    if (seatFill) {
+      var pct = Math.min(Math.round((next / max) * 100), 100);
+      seatFill.style.width = pct + '%';
+    }
+    if (next >= max) {
+      var actionDiv = card.querySelector('.event-card-footer > div:last-child');
+      if (actionDiv) {
+        var regForm = actionDiv.querySelector('form[action*="register"]');
+        if (regForm) {
+          var btn = document.createElement('button');
+          btn.className = 'btn btn-sm btn-ghost';
+          btn.disabled = true;
+          btn.textContent = 'Full';
+          regForm.replaceWith(btn);
+        }
+        var regBtn = actionDiv.querySelector('.btn-primary');
+        if (regBtn) {
+          var btn = document.createElement('button');
+          btn.className = 'btn btn-sm btn-ghost';
+          btn.disabled = true;
+          btn.textContent = 'Full';
+          regBtn.parentElement.replaceWith(btn);
+        }
+      }
+    }
+  });
+
+  socket.on('event:created', function(data) {
+    var grid = document.querySelector('.events-grid');
+    if (!grid) return;
+    if (document.querySelector('.event-card[data-event-id="' + data.id + '"]')) return;
+    var esc = window.escHtml || function(s) { return s; };
+    var desc = data.description ? esc(data.description) : '';
+    var pct = Math.min(Math.round((0 / data.max_participants) * 100), 100);
+    var html = '<div class="event-card" data-event-id="' + data.id + '" data-max="' + data.max_participants + '">'
+      + '<div class="event-card-header">'
+      + '<span class="badge badge-cat">' + esc(data.category) + '</span>'
+      + '</div>';
+    if (data.image_url) {
+      html += '<div style="border-radius:8px;overflow:hidden;max-height:180px;margin-bottom:12px;">'
+        + '<img src="' + esc(data.image_url) + '" alt="' + esc(data.title) + '" style="width:100%;height:180px;object-fit:cover;">'
+        + '</div>';
+    }
+    html += '<h3 class="event-card-title">' + esc(data.title) + '</h3>'
+      + '<p class="event-card-desc">' + desc.slice(0, 120) + (desc.length > 120 ? '...' : '') + '</p>'
+      + '<div class="event-card-meta">'
+      + '<span><i class="fas fa-calendar"></i> ' + esc(data.date_display) + '</span>';
+    if (data.time) html += '<span><i class="fas fa-clock"></i> ' + esc(data.time) + '</span>';
+    if (data.venue) html += '<span><i class="fas fa-map-marker-alt"></i> ' + esc(data.venue) + '</span>';
+    html += '</div>'
+      + '<div class="event-card-footer">'
+      + '<div class="seat-info">'
+      + '<div class="seat-bar"><div class="seat-fill" style="width:' + pct + '%"></div></div>'
+      + '<span>0/' + data.max_participants + ' seats</span>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">';
+    if (data.pdf_file) {
+      html += '<a href="/static/uploads/' + esc(data.pdf_file) + '" target="_blank" class="btn btn-sm btn-outline" style="border-color:var(--red);color:var(--red);"><i class="fas fa-file-pdf"></i> Brochure</a>';
+    }
+    if (data.max_participants > 0) {
+      html += '<form method="POST" action="/student/events/' + data.id + '/register">'
+        + '<button type="submit" class="btn btn-sm btn-primary">Register</button>'
+        + '</form>';
+    } else {
+      html += '<button class="btn btn-sm btn-ghost" disabled>Full</button>';
+    }
+    html += '</div></div></div>';
+    grid.insertAdjacentHTML('afterbegin', html);
+    if (socket.connected) {
+      socket.emit('join_event_room', { event_id: data.id });
+    }
+  });
+
+  socket.on('participant:deregistered', function(data) {
+    var card = document.querySelector('.event-card[data-event-id="' + data.event_id + '"]');
+    if (!card) return;
+    var seatSpan = card.querySelector('.seat-info span');
+    var seatFill = card.querySelector('.seat-fill');
+    var max = parseInt(card.dataset.max);
+    if (!seatSpan) return;
+    var parts = seatSpan.textContent.trim().split('/');
+    var cur = parseInt(parts[0]) || 0;
+    var next = Math.max(0, cur - 1);
+    seatSpan.textContent = next + '/' + max;
+    if (seatFill) {
+      var pct = Math.min(Math.round((next / max) * 100), 100);
+      seatFill.style.width = pct + '%';
+    }
+    var actionDiv = card.querySelector('.event-card-footer > div:last-child');
+    if (actionDiv) {
+      var fullBtn = actionDiv.querySelector('button:disabled');
+      if (fullBtn && fullBtn.textContent.trim() === 'Full' && next < max) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/student/events/' + data.event_id + '/register';
+        var btn = document.createElement('button');
+        btn.type = 'submit';
+        btn.className = 'btn btn-sm btn-primary';
+        btn.textContent = 'Register';
+        form.appendChild(btn);
+        fullBtn.replaceWith(form);
+      }
+    }
+  });
+
+  socket.on('event:updated', function(data) {
+    var card = document.querySelector('.event-card[data-event-id="' + data.id + '"]');
+    if (!card) return;
+    card.querySelector('.event-card-title').textContent = data.title;
+    var descEl = card.querySelector('.event-card-desc');
+    if (descEl) {
+      var d = data.description || '';
+      descEl.textContent = d.slice(0, 120) + (d.length > 120 ? '...' : '');
+    }
+    var catBadge = card.querySelector('.badge-cat');
+    if (catBadge) catBadge.textContent = data.category;
+    var cardImg = card.querySelector('.event-card-header + div img');
+    if (data.image_url) {
+      if (cardImg) {
+        cardImg.src = data.image_url;
+      } else {
+        var imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'border-radius:8px;overflow:hidden;max-height:180px;margin-bottom:12px;';
+        imgDiv.innerHTML = '<img src="' + esc(data.image_url) + '" alt="' + esc(data.title) + '" style="width:100%;height:180px;object-fit:cover;">';
+        card.insertBefore(imgDiv, card.querySelector('h3'));
+      }
+    } else if (cardImg) {
+      cardImg.closest('div[style*="border-radius"]').remove();
+    }
+    var meta = card.querySelector('.event-card-meta');
+    if (meta) {
+      var spans = meta.querySelectorAll('span');
+      if (spans[0]) spans[0].innerHTML = '<i class="fas fa-calendar"></i> ' + esc(data.date_display);
+      if (spans.length > 1 && data.time) spans[1].innerHTML = '<i class="fas fa-clock"></i> ' + esc(data.time);
+      if (spans.length > (data.time ? 2 : 1) && data.venue) spans[spans.length - 1].innerHTML = '<i class="fas fa-map-marker-alt"></i> ' + esc(data.venue);
+    }
+    var actionDiv = card.querySelector('.event-card-footer > div:last-child');
+    if (actionDiv) {
+      var oldPdfLink = actionDiv.querySelector('a[href*="uploads"]');
+      if (data.pdf_file) {
+        if (!oldPdfLink) {
+          var pdfA = document.createElement('a');
+          pdfA.href = '/static/uploads/' + esc(data.pdf_file);
+          pdfA.target = '_blank';
+          pdfA.className = 'btn btn-sm btn-outline';
+          pdfA.style.cssText = 'border-color:var(--red);color:var(--red);';
+          pdfA.innerHTML = '<i class="fas fa-file-pdf"></i> Brochure';
+          actionDiv.insertBefore(pdfA, actionDiv.firstChild);
+        } else {
+          oldPdfLink.href = '/static/uploads/' + esc(data.pdf_file);
+        }
+      } else if (oldPdfLink) {
+        oldPdfLink.remove();
+      }
+    }
+  });
+
+  socket.on('event:deleted', function(data) {
+    var card = document.querySelector('.event-card[data-event-id="' + data.id + '"]');
+    if (!card) return;
+    card.remove();
+    var grid = document.querySelector('.events-grid');
+    if (grid && !grid.querySelector('.event-card')) {
+      grid.outerHTML = '<div class="card"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events found</p></div></div>';
+    }
+  });
+})();
+</script>
+{% endblock %}

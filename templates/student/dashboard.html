@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}<i class="fas fa-th-large"></i> Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Hello, {{ user.name.split()[0] }} 👋</h1>
+    <p class="page-sub">{{ user.department or 'Sathyabama Institute of Science and Technology' }}</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ events|length }}</span>
+      <span class="stat-label">Upcoming Events</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card stat-gold">
+    <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ reg_count }}</span>
+      <span class="stat-label">Registered</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="fas fa-certificate"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ present_count }}</span>
+      <span class="stat-label">Certificates Earned</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+</div>
+
+<div class="dash-grid">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-calendar-check"></i> Upcoming Events</h3>
+      <a href="{{ url_for('student_events') }}" class="card-link">Browse all</a>
+    </div>
+    <div class="event-list">
+      {% if events %}
+        {% for event in events[:5] %}
+        <div class="event-row" data-event-id="{{ event.id }}">
+          <div class="event-date-badge">
+            <span class="edb-day">{{ event.date.strftime('%d') }}</span>
+            <span class="edb-mon">{{ event.date.strftime('%b') }}</span>
+          </div>
+          <div class="event-row-info">
+            <strong>{{ event.title }}</strong>
+            <span><i class="fas fa-map-marker-alt"></i> {{ event.venue or 'TBA' }}</span>
+          </div>
+          <span class="badge badge-cat">{{ event.category }}</span>
+          {% if event.id in registered_ids %}
+            <span class="badge badge-registered"><i class="fas fa-check"></i> Registered</span>
+          {% else %}
+            <a href="{{ url_for('student_events') }}" class="btn btn-sm btn-primary">Register</a>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="fas fa-calendar-times"></i><p>No upcoming events</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+  var socket = window._socket;
+  if (!socket) return;
+  var esc = window.escHtml || function(s) { return s; };
+
+  function updateEventCount(delta) {
+    var stat = document.querySelector('.stat-card.stat-blue .stat-value');
+    if (stat) {
+      var cur = parseInt(stat.textContent) || 0;
+      stat.textContent = Math.max(0, cur + delta);
+    }
+  }
+
+  socket.on('event:created', function(data) {
+    var list = document.querySelector('.event-list');
+    if (!list) return;
+    if (document.querySelector('.event-row[data-event-id="' + data.id + '"]')) return;
+    var empty = list.querySelector('.empty-state');
+    if (empty) empty.remove();
+    var row = document.createElement('div');
+    row.className = 'event-row';
+    row.setAttribute('data-event-id', data.id);
+    row.innerHTML = '<div class="event-date-badge">'
+      + '<span class="edb-day">' + esc(data.date ? data.date.split('-')[2] : '') + '</span>'
+      + '<span class="edb-mon">' + esc(data.date_display ? data.date_display.split(' ')[1] : '') + '</span>'
+      + '</div>'
+      + '<div class="event-row-info">'
+      + '<strong>' + esc(data.title) + '</strong>'
+      + '<span><i class="fas fa-map-marker-alt"></i> ' + esc(data.venue || 'TBA') + '</span>'
+      + '</div>'
+      + '<span class="badge badge-cat">' + esc(data.category) + '</span>'
+      + '<a href="{{ url_for("student_events") }}" class="btn btn-sm btn-primary">Register</a>';
+    list.insertBefore(row, list.firstChild);
+    updateEventCount(1);
+  });
+
+  socket.on('event:updated', function(data) {
+    var row = document.querySelector('.event-row[data-event-id="' + data.id + '"]');
+    if (!row) return;
+    var day = data.date ? data.date.split('-')[2] : '';
+    var mon = data.date_display ? data.date_display.split(' ')[1] : '';
+    row.querySelector('.edb-day').textContent = day;
+    row.querySelector('.edb-mon').textContent = mon;
+    row.querySelector('.event-row-info strong').textContent = data.title;
+    row.querySelector('.event-row-info span').innerHTML = '<i class="fas fa-map-marker-alt"></i> ' + esc(data.venue || 'TBA');
+    row.querySelector('.badge-cat').textContent = data.category;
+  });
+
+  socket.on('event:deleted', function(data) {
+    var row = document.querySelector('.event-row[data-event-id="' + data.id + '"]');
+    if (!row) return;
+    row.remove();
+    updateEventCount(-1);
+    var list = document.querySelector('.event-list');
+    if (list && !list.querySelector('.event-row')) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>No upcoming events</p></div>';
+    }
+  });
+})();
+</script>
+{% endblock %}

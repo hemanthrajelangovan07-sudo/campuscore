@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block page_title %}<i class="fas fa-calendar-alt"></i> {{ event.title[:40] ~ '...' if event.title|length > 40 else event.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-heading">{{ event.title }}</h1>
+    <p class="page-sub"><i class="fas fa-calendar"></i> {{ event.date.strftime('%d %B %Y') }}{% if event.time %} &middot; <i class="fas fa-clock"></i> {{ event.time }}{% endif %}{% if event.venue %} &middot; <i class="fas fa-map-marker-alt"></i> {{ event.venue }}{% endif %}</p>
+  </div>
+  <a href="{{ url_for('student_events') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="dash-grid">
+  <div>
+    {% if event.image_url %}<div style="margin-bottom:16px;border-radius:var(--radius);overflow:hidden;"><img src="{{ event.image_url }}" alt="{{ event.title }}" style="width:100%;max-height:300px;object-fit:cover;"/></div>{% endif %}
+    {% if event.pdf_file %}<div style="margin-bottom:16px;"><a href="{{ url_for('static', filename='uploads/' + event.pdf_file) }}" target="_blank" class="btn btn-primary" style="background:var(--red);border-color:var(--red);"><i class="fas fa-file-pdf"></i> Download Event Brochure</a></div>{% endif %}
+    <div class="card"><div class="card-header"><h3><i class="fas fa-info-circle"></i> Description</h3></div><div style="padding:20px;font-size:0.9rem;line-height:1.7;">{{ event.description }}</div></div>
+    {% if tags %}<div class="card"><div class="card-header"><h3><i class="fas fa-tags"></i> Tags</h3></div><div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:6px;">{% for tag in tags %}<span class="tag-pill">{{ tag }}</span>{% endfor %}</div></div>{% endif %}
+  </div>
+  <div>
+    <div class="card">
+      <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Event Details</h3></div>
+      <div style="padding:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="padding:16px;background:var(--off-white);border-radius:var(--radius-sm);text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--navy);">{{ reg_count }}</div><div style="font-size:0.78rem;color:var(--text-muted);">Registered</div></div>
+          <div style="padding:16px;background:var(--off-white);border-radius:var(--radius-sm);text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--teal);">{{ event.max_participants }}</div><div style="font-size:0.78rem;color:var(--text-muted);">Capacity</div></div>
+        </div>
+        {% if organizer %}<p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-user"></i> <strong>Organizer:</strong> {{ organizer.name }}</p>{% endif %}
+        {% if event.venue %}<p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-map-marker-alt"></i> <strong>Venue:</strong> {{ event.venue }}</p>{% endif %}
+        <p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-tag"></i> <strong>Category:</strong> <span class="badge badge-cat">{{ event.category }}</span></p>
+      </div>
+    </div>
+    <div class="card">
+      <div style="padding:20px;">
+        {% if event.id in registered_ids %}
+          <span class="badge badge-registered" style="width:100%;justify-content:center;padding:12px;font-size:0.9rem;"><i class="fas fa-check-circle"></i> You are registered</span>
+          <form method="POST" action="{{ url_for('deregister_event', event_id=event.id) }}" style="margin-top:10px;">
+            <button type="submit" class="btn btn-outline btn-full" onclick="return confirm('Cancel your registration for {{ event.title }}?')"><i class="fas fa-times"></i> Cancel Registration</button>
+          </form>
+        {% elif reg_count >= event.max_participants %}
+          <span class="badge badge-absent" style="width:100%;justify-content:center;padding:12px;font-size:0.9rem;"><i class="fas fa-ban"></i> Event Full</span>
+        {% else %}
+          <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}">
+            <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-check"></i> Register Now</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

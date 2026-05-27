@@ -1,0 +1,28 @@
+{% extends "email/base_email.html" %}
+{% block content %}
+<div style="text-align:center;margin-bottom:20px;">
+  <span style="font-size:2.4rem;">👤</span>
+  <h2 style="margin:12px 0 0;font-size:1.3rem;color:#1a2744;">New {{ new_user.role|title }} Registration</h2>
+</div>
+<p style="margin:0 0 6px;color:#475569;font-size:0.95rem;line-height:1.5;">Hi <strong>{{ admin.name }}</strong>,</p>
+<p style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">A new {{ new_user.role }} has registered on CampusCore:</p>
+
+<div style="background:#f0f4ff;border-left:4px solid #1a2744;border-radius:4px;padding:18px 20px;margin-bottom:24px;">
+  <table>
+    <tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">Name</td><td style="padding:4px 0;font-weight:600;color:#1a2744;">{{ new_user.name }}</td></tr>
+    <tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">Email</td><td style="padding:4px 0;color:#334155;">{{ new_user.email }}</td></tr>
+    <tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">Role</td><td style="padding:4px 0;color:#334155;">{{ new_user.role|title }}</td></tr>
+    {% if new_user.college %}<tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">College</td><td style="padding:4px 0;color:#334155;">{{ new_user.college }}</td></tr>{% endif %}
+    {% if new_user.department %}<tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">Dept</td><td style="padding:4px 0;color:#334155;">{{ new_user.department }}</td></tr>{% endif %}
+    <tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:0.88rem;">Registered</td><td style="padding:4px 0;color:#334155;">{{ new_user.created_at.strftime('%d %b %Y, %I:%M %p') }}</td></tr>
+  </table>
+</div>
+
+<table style="width:100%;">
+  <tr><td style="text-align:center;padding:6px 0 12px;">
+    <a href="{{ admin_url }}" style="display:inline-block;padding:13px 32px;background:#1a2744;color:#ffffff;text-decoration:none;border-radius:6px;font-size:0.95rem;font-weight:600;">View User in Admin Panel</a>
+  </td></tr>
+</table>
+
+<p style="margin:20px 0 0;color:#94a3b8;font-size:0.82rem;">You can manage this user from the admin dashboard.</p>
+{% endblock %}

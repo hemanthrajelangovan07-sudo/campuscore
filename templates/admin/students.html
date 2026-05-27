@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block page_title %}<i class="fas fa-users"></i> Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Student Directory</h1>
+    <p class="page-sub">{{ students|length }} registered students</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Participant ID</th><th>Name</th><th>Email</th><th>Reg. Number</th><th>Department</th><th>Joined</th></tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td><code style="font-size:0.8rem;color:var(--navy);">{{ s.participant_id or '—' }}</code></td>
+          <td><div class="cell-user"><span class="mini-avatar">{{ s.name[0] }}</span>{{ s.name }}</div></td>
+          <td>{{ s.email }}</td>
+          <td>{{ s.reg_number or '—' }}</td>
+          <td>{{ s.department or '—' }}</td>
+          <td class="text-muted">{{ s.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-cell">
+          <div class="empty-state"><i class="fas fa-user-slash"></i><p>No students registered</p></div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

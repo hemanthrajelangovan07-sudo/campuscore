@@ -1,0 +1,27 @@
+{% extends "email/base_email.html" %}
+{% block content %}
+<div style="text-align:center;margin-bottom:20px;">
+  <span style="font-size:2.4rem;">🎉</span>
+  <h2 style="margin:12px 0 0;font-size:1.3rem;color:#1a2744;">New Event Published</h2>
+</div>
+<p style="margin:0 0 6px;color:#475569;font-size:0.95rem;line-height:1.5;">Hi <strong>{{ admin.name }}</strong>,</p>
+<p style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">A new event has been published on CampusCore:</p>
+
+<div style="background:#f0f4ff;border-left:4px solid #1a2744;border-radius:4px;padding:18px 20px;margin-bottom:24px;">
+  <h3 style="margin:0 0 12px;font-size:1.05rem;color:#1a2744;">{{ event.title }}</h3>
+  <table>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">📅</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Date:</strong> {{ event.date.strftime('%A, %d %B %Y') }}</td></tr>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">🕐</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Time:</strong> {{ event.time or 'TBD' }}</td></tr>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">📍</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Venue:</strong> {{ event.venue or 'TBD' }}</td></tr>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">👤</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Created by:</strong> {{ creator_name }}</td></tr>
+  </table>
+</div>
+
+<table style="width:100%;">
+  <tr><td style="text-align:center;padding:6px 0 12px;">
+    <a href="{{ url_for('admin_events', _external=True) }}" style="display:inline-block;padding:13px 32px;background:#1a2744;color:#ffffff;text-decoration:none;border-radius:6px;font-size:0.95rem;font-weight:600;">View Events</a>
+  </td></tr>
+</table>
+
+<p style="margin:20px 0 0;color:#94a3b8;font-size:0.82rem;">You can manage this event from the admin dashboard.</p>
+{% endblock %}

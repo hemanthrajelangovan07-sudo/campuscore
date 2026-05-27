@@ -1,0 +1,47 @@
+{% extends "email/base_email.html" %}
+{% block content %}
+{% set cancelled = changes|selectattr('field', 'equalto', 'cancelled')|list %}
+{% if cancelled %}
+<div style="text-align:center;margin-bottom:20px;">
+  <span style="font-size:2.4rem;">❌</span>
+  <h2 style="margin:12px 0 0;font-size:1.3rem;color:#dc2626;">Event Cancelled</h2>
+</div>
+<p style="margin:0 0 8px;color:#475569;font-size:0.95rem;line-height:1.5;">Hi <strong>{{ user.name }}</strong>,</p>
+<p style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">We regret to inform you that <strong>{{ event.title }}</strong> has been cancelled.</p>
+<div style="background:#fef2f2;border-radius:6px;padding:16px;margin-bottom:24px;border-left:4px solid #dc2626;">
+  <p style="margin:0;color:#991b1b;font-size:0.9rem;">If you have any questions, please contact the event organizer for further information.</p>
+</div>
+{% else %}
+<div style="text-align:center;margin-bottom:20px;">
+  <span style="font-size:2.4rem;">📋</span>
+  <h2 style="margin:12px 0 0;font-size:1.3rem;color:#1a2744;">Event Updated</h2>
+</div>
+<p style="margin:0 0 6px;color:#475569;font-size:0.95rem;line-height:1.5;">Hi <strong>{{ user.name }}</strong>,</p>
+<p style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">The event <strong>{{ event.title }}</strong> has been updated:</p>
+
+{% for c in changes %}
+<div style="background:#f8fafc;border-radius:4px;padding:14px 18px;margin-bottom:10px;">
+  <p style="margin:0 0 4px;color:#64748b;font-size:0.8rem;font-weight:600;text-transform:uppercase;">{{ c.field }}</p>
+  {% if c.old_value and c.new_value and c.old_value != c.new_value %}
+  <p style="margin:0;color:#64748b;font-size:0.88rem;">
+    <span style="color:#dc2626;text-decoration:line-through;">{{ c.old_value }}</span>
+    &rarr;
+    <span style="color:#16a34a;font-weight:600;">{{ c.new_value }}</span>
+  </p>
+  {% else %}
+  <p style="margin:0;color:#475569;font-size:0.9rem;">{{ c.new_value }}</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<div style="background:#f0f4ff;border-left:4px solid #1a2744;border-radius:4px;padding:16px 20px;margin:24px 0;">
+  <table>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">📅</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Date:</strong> {{ event.date.strftime('%A, %d %B %Y') }}</td></tr>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">🕐</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Time:</strong> {{ event.time or 'TBD' }}</td></tr>
+    <tr><td style="padding:3px 12px 3px 0;color:#64748b;font-size:0.88rem;">📍</td><td style="padding:3px 0;color:#334155;font-size:0.88rem;"><strong>Venue:</strong> {{ event.venue or 'TBD' }}</td></tr>
+  </table>
+</div>
+
+<p style="margin:0;color:#94a3b8;font-size:0.82rem;">If you have any questions, please contact the event organizer.</p>
+{% endblock %}

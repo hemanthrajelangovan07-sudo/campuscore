@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+
+{% block auth_content %}
+<div class="auth-split">
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <img src="{{ url_for('static', filename='images/sist_logo.png') }}" alt="SIST Logo" class="auth-logo"/>
+      <h1 class="auth-university">Sathyabama Institute of Science and Technology</h1>
+      <p class="auth-tagline">Deemed to be University | Justice · Peace · Revolution</p>
+      <div class="auth-features">
+        <div class="auth-feat"><i class="fas fa-calendar-check"></i><span>Event Management</span></div>
+        <div class="auth-feat"><i class="fas fa-certificate"></i><span>Digital Certificates</span></div>
+        <div class="auth-feat"><i class="fas fa-user-check"></i><span>Attendance Tracking</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to CampusCore Portal</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}"><i class="fas fa-info-circle"></i> {{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}" class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" name="email" placeholder="your@sist.ac.in" required autocomplete="email"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" name="password" placeholder="••••••••" required/>
+            <button type="button" class="pw-toggle" onclick="togglePw('password')"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <!-- Google OAuth Login -->
+      <div class="oauth-divider">
+        <span>or</span>
+      </div>
+
+      <a href="{{ url_for('google_login') }}" class="btn-google">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+             alt="Google logo" width="20" height="20">
+        Sign in with Google
+      </a>
+
+      <p class="auth-switch">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+
+      <div class="demo-creds">
+        <p class="demo-title"><i class="fas fa-key"></i> Demo Credentials</p>
+        <div class="demo-grid">
+          <div class="demo-item" onclick="fillCreds('admin@sist.ac.in','admin123')">
+            <span class="badge badge-admin">Admin</span>
+            <code>admin@sist.ac.in</code>
+            <code>admin123</code>
+          </div>
+          <div class="demo-item" onclick="fillCreds('student@sist.ac.in','student123')">
+            <span class="badge badge-student">Student</span>
+            <code>student@sist.ac.in</code>
+            <code>student123</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fillCreds(email, pass) {
+  document.getElementById('email').value = email;
+  document.getElementById('password').value = pass;
+}
+function togglePw(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

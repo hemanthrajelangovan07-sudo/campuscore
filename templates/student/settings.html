@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% block title %}My Settings{% endblock %}
+{% block page_title %}<i class="fas fa-sliders-h"></i> My Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">My Settings</h1>
+    <p class="page-sub">Manage your profile and preferences</p>
+  </div>
+</div>
+
+<div class="settings-wrap">
+
+  {# Profile Summary Card #}
+  <div class="card settings-profile-card">
+    <div class="settings-profile-inner">
+      <div class="settings-avatar">{{ user.name[0] if user.name else 'S' }}</div>
+      <div class="settings-profile-info">
+        <h2>{{ user.name or 'Student' }}</h2>
+        <p><i class="fas fa-envelope"></i> {{ user.email }}</p>
+        <span class="badge badge-student">Student</span>
+      </div>
+    </div>
+  </div>
+
+  {# Tab Navigation #}
+  <div class="settings-tabs">
+    <button class="settings-tab active" data-tab="profile"><i class="fas fa-user"></i> Profile</button>
+    <button class="settings-tab" data-tab="notifications"><i class="fas fa-bell"></i> Notifications</button>
+    <button class="settings-tab" data-tab="appearance"><i class="fas fa-palette"></i> Appearance</button>
+  </div>
+
+  {# Settings Form #}
+  <div class="card">
+    <form method="POST">
+      {# TAB: Profile #}
+      <div class="settings-panel active" id="tab-profile">
+        <div class="settings-panel-body">
+          <h4 class="settings-panel-title"><i class="fas fa-user-edit"></i> Personal Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name <span class="required">*</span></label>
+              <div class="input-wrap">
+                <i class="fas fa-user"></i>
+                <input type="text" name="first_name" value="{{ user.first_name or user.name.split()[0] }}" required/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <div class="input-wrap">
+                <i class="fas fa-user"></i>
+                <input type="text" name="last_name" value="{{ user.last_name or user.name.split()[1] if user.name and user.name.split()|length > 1 else '' }}"/>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label>Email <span class="required">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope"></i>
+              <input type="email" name="email" value="{{ user.email }}" required/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label>College</label>
+            <div class="input-wrap">
+              <i class="fas fa-university"></i>
+              <input type="text" name="college" value="{{ user.college or '' }}" placeholder="Sathyabama Institute of Science and Technology"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# TAB: Notifications #}
+      <div class="settings-panel" id="tab-notifications">
+        <div class="settings-panel-body">
+          <h4 class="settings-panel-title"><i class="fas fa-bell"></i> Notification Preferences</h4>
+          <p class="settings-panel-desc">Choose which updates you'd like to receive.</p>
+          <div class="settings-notif-list">
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-envelope"></i>
+                <div>
+                  <strong>Email</strong>
+                  <span>Receive email notifications</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="email_notifications" value="0"/>
+                <input type="checkbox" name="email_notifications" value="1" {% if settings.email_notifications %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# TAB: Appearance #}
+      <div class="settings-panel" id="tab-appearance">
+        <div class="settings-panel-body">
+          <h4 class="settings-panel-title"><i class="fas fa-palette"></i> Appearance</h4>
+          <p class="settings-panel-desc">Customize how CampusCore looks for you.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Theme</label>
+              <select name="theme">
+                <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>☀️ Light</option>
+                <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %}>🌙 Dark</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Language</label>
+              <select name="language">
+                <option value="english" {% if settings.language == 'english' %}selected{% endif %}>English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+/* Layout */
+.settings-wrap { margin: 0 auto; width: 100%; }
+
+/* Profile Summary Card */
+.settings-profile-card {
+  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  border: none;
+  margin-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.settings-profile-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 32px 32px;
+}
+.settings-avatar {
+  width: 76px; height: 76px; border-radius: 50%;
+  background: var(--gold);
+  color: var(--navy-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.settings-profile-info h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: white;
+  margin-bottom: 6px;
+}
+.settings-profile-info p {
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.75);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.settings-profile-info .badge {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 0.82rem;
+  padding: 4px 12px;
+}
+
+/* Tab Navigation */
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+.settings-tab {
+  flex: 1;
+  padding: 18px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.2s;
+  position: relative;
+  border-bottom: 2px solid transparent;
+}
+.settings-tab i { font-size: 1.05rem; }
+.settings-tab:hover { color: var(--text); background: var(--off-white); }
+.settings-tab.active {
+  color: var(--navy);
+  background: var(--off-white);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+.settings-tab:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 25%; height: 50%;
+  width: 1px;
+  background: var(--border);
+}
+
+/* Tab Panels */
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.settings-panel-body { padding: 32px; }
+.settings-panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--navy);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.settings-panel-title i { color: var(--gold); font-size: 1.1rem; }
+.settings-panel-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.required { color: var(--red); }
+
+/* Notification Rows */
+.settings-notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.settings-notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--off-white);
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 14px;
+}
+.settings-notif-row:hover { background: #eef0f6; }
+.settings-notif-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.settings-notif-info > i {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: white;
+  color: var(--navy-light);
+  font-size: 1rem;
+  border: 1px solid var(--border);
+}
+.settings-notif-info strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.settings-notif-info span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #cbd5e1;
+  border-radius: 28px;
+  transition: 0.25s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 22px; width: 22px;
+  left: 3px; bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--navy-light);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+/* Footer */
+.settings-footer {
+  padding: 20px 32px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .settings-tabs { background: var(--white); border-color: var(--border); }
+[data-theme="dark"] .settings-tab:hover { background: var(--off-white); }
+[data-theme="dark"] .settings-tab.active { background: var(--off-white); }
+[data-theme="dark"] .settings-notif-row { background: var(--off-white); }
+[data-theme="dark"] .settings-notif-row:hover { background: #1e2a4a; }
+[data-theme="dark"] .settings-notif-info > i { background: var(--white); border-color: var(--border); }
+[data-theme="dark"] .toggle-slider { background: #475569; }
+[data-theme="dark"] .settings-profile-info .badge { background: rgba(255,255,255,0.12); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var tabs = document.querySelectorAll('.settings-tab');
+  var panels = {
+    profile: document.getElementById('tab-profile'),
+    notifications: document.getElementById('tab-notifications'),
+    appearance: document.getElementById('tab-appearance'),
+  };
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+      for (var key in panels) {
+        if (panels[key]) panels[key].classList.remove('active');
+      }
+      var target = panels[this.dataset.tab];
+      if (target) target.classList.add('active');
+    });
+  });
+})();
+
+var t = {{ settings.theme|tojson }};
+localStorage.setItem('campuscore-theme', t);
+var h = document.documentElement;
+var i = document.querySelector('#themeToggle i');
+if (t === 'dark') {
+  h.setAttribute('data-theme', 'dark');
+  if (i) i.className = 'fas fa-sun';
+} else {
+  h.removeAttribute('data-theme');
+  if (i) i.className = 'fas fa-moon';
+}
+</script>
+{% endblock %}

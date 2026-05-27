@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}My Events{% endblock %}
+{% block page_title %}<i class="fas fa-ticket-alt"></i> My Events{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">My Registered Events</h1>
+    <p class="page-sub">{{ registrations|length }} event(s) registered</p>
+  </div>
+</div>
+
+{% if registrations %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Event</th><th>Date</th><th>Venue</th><th>Category</th><th>Material</th><th>Attendance</th><th>Certificate</th></tr>
+      </thead>
+      <tbody>
+        {% for reg, event in registrations %}
+        {% set att_status = attendance_map.get(event.id, 'not_marked') %}
+        <tr>
+          <td><strong>{{ event.title }}</strong></td>
+          <td>
+            <span class="date-cell">
+              <i class="fas fa-calendar"></i> {{ event.date.strftime('%d %b %Y') }}
+              {% if event.date == today %}<span class="badge badge-today">Today</span>{% endif %}
+              {% if event.date < today %}<span class="badge badge-past">Past</span>{% endif %}
+            </span>
+          </td>
+          <td>{{ event.venue or '—' }}</td>
+          <td><span class="badge badge-cat">{{ event.category }}</span></td>
+          <td>
+            {% if event.pdf_file %}
+            <a href="{{ url_for('static', filename='uploads/' + event.pdf_file) }}" target="_blank" class="btn btn-sm btn-outline" style="border-color:var(--red);color:var(--red);"><i class="fas fa-file-pdf"></i> Brochure</a>
+            {% else %}
+            <span class="text-muted" style="font-size:0.8rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if att_status == 'present' %}
+              <span class="badge badge-present"><i class="fas fa-check"></i> Present</span>
+            {% elif att_status == 'absent' %}
+              <span class="badge badge-absent"><i class="fas fa-times"></i> Absent</span>
+            {% else %}
+              <span class="badge badge-muted">Not Marked</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if att_status == 'present' %}
+              <a href="{{ url_for('download_certificate', event_id=event.id) }}"
+                 class="btn btn-sm btn-gold">
+                <i class="fas fa-download"></i> Download PDF
+              </a>
+            {% elif event.date < today and att_status == 'absent' %}
+              <span class="text-muted" style="font-size:0.8rem;">Not eligible</span>
+            {% else %}
+              <span class="text-muted" style="font-size:0.8rem;">Pending</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-ticket-alt"></i>
+    <p>You haven't registered for any events yet.</p>
+    <a href="{{ url_for('student_events') }}" class="btn btn-primary">Browse Events</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="info-banner">
+  <i class="fas fa-info-circle"></i>
+  <p>Certificates are automatically available when your attendance is marked as <strong>Present</strong> by an admin. Download your certificate as a professionally designed PDF.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+  var socket = window._socket;
+  if (!socket) return;
+
+  socket.on('attendance:updated', function(data) {
+    var rows = document.querySelectorAll('tbody tr');
+    for (var i = 0; i < rows.length; i++) {
+      var strong = rows[i].querySelector('td strong');
+      if (strong && strong.textContent === data.event_title) {
+        var attCell = rows[i].querySelectorAll('td')[5];
+        var certCell = rows[i].querySelectorAll('td')[6];
+        if (!attCell) return;
+        if (data.status === 'present') {
+          attCell.innerHTML = '<span class="badge badge-present"><i class="fas fa-check"></i> Present</span>';
+          if (certCell) {
+            certCell.innerHTML = '<a href="/student/certificate/' + data.event_id + '" class="btn btn-sm btn-gold"><i class="fas fa-download"></i> Download PDF</a>';
+          }
+        } else if (data.status === 'absent') {
+          attCell.innerHTML = '<span class="badge badge-absent"><i class="fas fa-times"></i> Absent</span>';
+          if (certCell) certCell.innerHTML = '<span class="text-muted" style="font-size:0.8rem;">Not eligible</span>';
+        }
+        break;
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

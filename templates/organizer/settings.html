@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}<i class="fas fa-cog"></i> Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Settings</h1>
+    <p class="page-sub">Configure your preferences</p>
+  </div>
+</div>
+
+<div class="card" style="max-width: 560px;">
+  <form method="POST" style="padding: 24px;">
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-bell"></i> Notification Preferences</h4>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 14px; background: var(--off-white); border-radius: var(--radius-sm);">
+          <input type="hidden" name="email_notifications" value="0"/>
+          <input type="checkbox" name="email_notifications" value="1" {% if settings.email_notifications %}checked{% endif %} style="width: 18px; height: 18px;"/>
+          <span style="font-weight: 500; flex: 1;">Email</span>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Receive email notifications</span>
+        </label>
+
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-palette"></i> Appearance</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Theme</label>
+          <select name="theme">
+            <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>Light</option>
+            <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %}>Dark</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Language</label>
+          <select name="language">
+            <option value="english" {% if settings.language == 'english' %}selected{% endif %}>English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var t = '{{ settings.theme }}';
+localStorage.setItem('campuscore-theme', t);
+var h = document.documentElement;
+var i = document.querySelector('#themeToggle i');
+if (t === 'dark') {
+  h.setAttribute('data-theme', 'dark');
+  if (i) i.className = 'fas fa-sun';
+} else {
+  h.removeAttribute('data-theme');
+  if (i) i.className = 'fas fa-moon';
+}
+</script>
+{% endblock %}

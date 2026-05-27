@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Announcements{% endblock %}
+{% block page_title %}<i class="fas fa-bullhorn"></i> Announcements{% endblock %}
+
+{% block head %}
+<style>
+  .ann-page { max-width: 820px; }
+
+  .ann-item {
+    display: flex; align-items: flex-start; gap: .9rem;
+    padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .ann-item:last-child { border-bottom: none; }
+  .ann-item:hover { background: var(--off-white); }
+
+  .ann-stripe {
+    width: 3px; border-radius: 4px; align-self: stretch;
+    min-height: 44px; flex-shrink: 0;
+  }
+  .stripe-info    { background: #4361ee; }
+  .stripe-warning { background: #f59e0b; }
+  .stripe-urgent  { background: var(--red); }
+
+  .priority-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 700; padding: .2rem .6rem;
+    border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .badge-info    { background: #eef0fd; color: #4361ee; }
+  .badge-warning { background: #fffbeb; color: #b45309; }
+  .badge-urgent  { background: #fef2f2; color: #b91c1c; }
+  [data-theme="dark"] .badge-info { background: #1e2a4a; color: #93c5fd; }
+  [data-theme="dark"] .badge-warning { background: #2a241a; color: #fde68a; }
+  [data-theme="dark"] .badge-urgent { background: #2a1a1a; color: #fca5a5; }
+
+  .ann-message {
+    font-size: .925rem; color: var(--text);
+    font-weight: 500; line-height: 1.55; margin: .35rem 0 .4rem;
+  }
+
+  .ann-meta {
+    font-size: .75rem; color: var(--text-muted);
+    display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
+  }
+  .ann-meta i { font-size: .68rem; margin-right: .25rem; }
+
+  .empty-state-ann {
+    text-align: center; padding: 3.5rem 2rem; color: var(--text-muted);
+  }
+  .empty-state-ann i { font-size: 2.5rem; opacity: .35; display: block; margin-bottom: .75rem; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ann-item-new { animation: slideDown .35s ease forwards; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ann-page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-heading">Announcements</h1>
+      <p class="page-sub">Live updates from your institution</p>
+    </div>
+    <span class="badge badge-cat" id="countBadge">{{ announcements|length }} total</span>
+  </div>
+
+  <div class="card" id="annList">
+    {% if announcements %}
+      {% for ann in announcements %}
+      <div class="ann-item" data-priority="{{ ann.priority }}">
+        <div class="ann-stripe stripe-{{ ann.priority }}"></div>
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="priority-badge badge-{{ ann.priority }}">
+              <i class="fas {{ {'info':'fa-circle-info', 'warning':'fa-triangle-exclamation', 'urgent':'fa-circle-exclamation'}[ann.priority] }}"></i>
+              {{ ann.priority_label }}
+            </span>
+          </div>
+          <p class="ann-message">{{ ann.message }}</p>
+          <div class="ann-meta">
+            <span><i class="far fa-clock me-1"></i>{{ ann.formatted_time() }}</span>
+            <span><i class="far fa-user me-1"></i>{{ ann.author_name }}</span>
+            <span><i class="fas fa-shield-halved me-1"></i>{{ ann.author_role }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state-ann">
+        <i class="fas fa-bullhorn"></i>
+        <p class="fw-medium">No announcements yet</p>
+        <p class="small">Check back soon for updates.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  var stripeMap = { info:'stripe-info', warning:'stripe-warning', urgent:'stripe-urgent' };
+  var badgeMap  = { info:'badge-info',  warning:'badge-warning',  urgent:'badge-urgent'  };
+  var iconMap   = { info:'fa-circle-info', warning:'fa-triangle-exclamation', urgent:'fa-circle-exclamation' };
+
+  if (window._socket) {
+    window._socket.on('new_announcement', function (data) {
+      if (data.author_role === 'admin' || data.author_role === 'organizer') {
+        var list = document.getElementById('annList');
+        var empty = list.querySelector('.empty-state-ann');
+        if (empty) empty.remove();
+
+        var item = document.createElement('div');
+        item.className = 'ann-item ann-item-new';
+        item.dataset.priority = data.priority;
+        item.innerHTML =
+          '<div class="ann-stripe ' + (stripeMap[data.priority] || 'stripe-info') + '"></div>' +
+          '<div class="flex-grow-1 min-w-0">' +
+            '<div class="d-flex align-items-center gap-2 mb-1">' +
+              '<span class="priority-badge ' + (badgeMap[data.priority] || 'badge-info') + '">' +
+                '<i class="fas ' + (iconMap[data.priority] || 'fa-circle-info') + '"></i> ' +
+                escHtml(data.priority_label) +
+              '</span>' +
+            '</div>' +
+            '<p class="ann-message">' + escHtml(data.message) + '</p>' +
+            '<div class="ann-meta">' +
+              '<span><i class="far fa-clock me-1"></i>' + escHtml(data.time) + '</span>' +
+              '<span><i class="far fa-user me-1"></i>' + escHtml(data.author) + '</span>' +
+              '<span><i class="fas fa-shield-halved me-1"></i>' + escHtml(data.author_role) + '</span>' +
+            '</div>' +
+          '</div>';
+        list.insertBefore(item, list.firstChild);
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

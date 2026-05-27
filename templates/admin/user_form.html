@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if user_obj else 'Create' }} User{% endblock %}
+{% block page_title %}<i class="fas fa-user-{{ 'edit' if user_obj else 'plus' }}"></i> {{ 'Edit' if user_obj else 'Create' }} User{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-heading">{{ 'Edit User' if user_obj else 'Create New User' }}</h1></div>
+  <a href="{{ url_for('admin_users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="card form-card" style="max-width: 700px;">
+  <div id="form-errors" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:16px;color:#991b1b;font-size:0.88rem;">
+    <strong><i class="fas fa-exclamation-circle"></i> Please fix the following errors:</strong>
+    <ul id="error-list" style="margin:6px 0 0 16px;padding:0;"></ul>
+  </div>
+  <form method="POST" id="user-form">
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-user"></i> Basic Info</h4>
+      <div class="form-group" style="margin-bottom: 16px;"><label>Full Name *</label><input type="text" name="name" value="{{ user_obj.name if user_obj else '' }}" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input type="text" name="first_name" value="{{ user_obj.first_name or '' }}" required/></div>
+        <div class="form-group"><label>Last Name *</label><input type="text" name="last_name" value="{{ user_obj.last_name or '' }}" required/></div>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;"><label>Email *</label><input type="email" name="email" value="{{ user_obj.email if user_obj else '' }}" required/></div>
+      {% if not user_obj %}<div class="form-group" style="margin-bottom: 16px;"><label>Password *</label><input type="password" name="password" required/></div>{% endif %}
+      <div class="form-group"><label>Role *</label>
+        <select name="role" id="role-select" onchange="toggleAcademicFields()" required>
+          <option value="student" {% if user_obj and user_obj.role == 'student' %}selected{% endif %}>Student</option>
+          <option value="organizer" {% if user_obj and user_obj.role == 'organizer' %}selected{% endif %}>Organizer</option>
+          <option value="admin" {% if user_obj and user_obj.role == 'admin' %}selected{% endif %}>Admin</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section" id="contact-section">
+      <h4 class="form-section-title"><i class="fas fa-address-card"></i> Contact Details</h4>
+      <div class="form-group" style="margin-bottom: 16px;"><label>Phone *</label><input type="text" name="phone" value="{{ user_obj.phone or '' }}" placeholder="+91 9876543210" maxlength="15" required/></div>
+    </div>
+
+    <div class="form-section student-fields" id="academic-section">
+      <h4 class="form-section-title"><i class="fas fa-graduation-cap"></i> Academic Details</h4>
+      <div class="form-group" style="margin-bottom: 16px;"><label>College *</label><input type="text" name="college" value="{{ user_obj.college if user_obj else '' }}" placeholder="Sathyabama Institute of Science and Technology" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Year of Study *</label>
+          <select name="year_of_study">
+            <option value="">Select Year</option>
+            <option value="1" {% if user_obj and user_obj.year_of_study == 1 %}selected{% endif %}>1st Year</option>
+            <option value="2" {% if user_obj and user_obj.year_of_study == 2 %}selected{% endif %}>2nd Year</option>
+            <option value="3" {% if user_obj and user_obj.year_of_study == 3 %}selected{% endif %}>3rd Year</option>
+            <option value="4" {% if user_obj and user_obj.year_of_study == 4 %}selected{% endif %}>4th Year</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Department *</label><input type="text" name="department" value="{{ user_obj.department or '' }}" placeholder="Computer Science Engineering" required/></div>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;"><label>Reg. Number</label><input type="text" name="reg_number" value="{{ user_obj.reg_number or '' }}" placeholder="SIST2024001"/></div>
+    </div>
+
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-link"></i> Social Links</h4>
+      <div class="form-group" style="margin-bottom: 16px;"><label>GitHub URL</label><input type="url" name="github_url" value="{{ user_obj.github_url or '' }}" placeholder="https://github.com/username"/></div>
+      <div class="form-group" style="margin-bottom: 16px;"><label>LinkedIn URL</label><input type="url" name="linkedin_url" value="{{ user_obj.linkedin_url or '' }}" placeholder="https://linkedin.com/in/username"/></div>
+      <div class="form-group" style="margin-bottom: 16px;"><label>Profile Photo URL</label><input type="url" name="profile_photo_url" value="{{ user_obj.profile_photo_url or '' }}" placeholder="https://example.com/photo.jpg"/></div>
+    </div>
+
+    {% if user_obj %}
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-cog"></i> Settings</h4>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Participant ID</label>
+        <input type="text" value="{{ user_obj.participant_id or '' }}" readonly style="background:var(--bg-muted);color:var(--text-muted);cursor:not-allowed;width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);box-sizing:border-box;"/>
+      </div>
+
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a href="{{ url_for('admin_users') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if user_obj else 'Create' }} User</button>
+    </div>
+  </form>
+</div>
+
+{% if user_obj and user_obj.id != session.user_id %}
+<div class="card" style="max-width:700px;margin-top:20px;padding:20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h4 style="margin:0 0 4px;font-size:0.95rem;color:var(--navy);"><i class="fas fa-lock" style="color:var(--amber);"></i> Force Password Reset</h4>
+      <p style="margin:0;font-size:0.82rem;color:var(--text-muted);">
+        {% if user_obj.force_password_reset %}<span style="color:var(--amber);font-weight:600;">&#9888; Reset is already pending.</span>{% endif %}
+        The user will be required to set a new password on next login.
+      </p>
+    </div>
+    <form method="POST" action="{{ url_for('admin_force_reset', uid=user_obj.id) }}" onsubmit="return confirm('Force password reset for {{ user_obj.name }}?')" style="flex-shrink:0;">
+      <button type="submit" class="btn btn-sm btn-outline" style="border-color:var(--amber);color:var(--amber);white-space:nowrap;">
+        <i class="fas fa-lock"></i> Force Reset
+      </button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function toggleAcademicFields() {
+  const role = document.getElementById('role-select').value;
+  const isStudent = role === 'student';
+  document.querySelectorAll('.student-fields').forEach(el => {
+    el.style.display = isStudent ? 'block' : 'none';
+    el.querySelectorAll('input, select').forEach(input => {
+      if (input.name === 'reg_number') return;
+      if (isStudent) {
+        input.setAttribute('required', '');
+        input.closest('.form-group')?.querySelector('label')?.classList.add('required-mark');
+      } else {
+        input.removeAttribute('required');
+      }
+    });
+  });
+}
+toggleAcademicFields();
+</script>
+{% endblock %}

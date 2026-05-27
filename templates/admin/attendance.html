@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Attendance — {{ event.title }}{% endblock %}
+{% block page_title %}<i class="fas fa-user-check"></i> Attendance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">{{ event.title }}</h1>
+    <p class="page-sub">
+      <i class="fas fa-calendar"></i> {{ event.date.strftime('%d %B %Y') }}
+      {% if event.venue %} &nbsp;·&nbsp; <i class="fas fa-map-marker-alt"></i> {{ event.venue }}{% endif %}
+      &nbsp;·&nbsp; <i class="fas fa-users"></i> {{ registrations|length }} registered
+    </p>
+  </div>
+  <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin_events') }}{% else %}{{ url_for('organizer_events') }}{% endif %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card">
+  {% if registrations %}
+  <div class="attendance-toolbar">
+    <div class="att-controls">
+      <button type="button" class="btn btn-sm btn-teal" onclick="markAll('present')"><i class="fas fa-check-double"></i> Mark All Present</button>
+      <button type="button" class="btn btn-sm btn-outline" onclick="markAll('absent')"><i class="fas fa-times"></i> Mark All Absent</button>
+    </div>
+    <div class="att-summary" id="attSummary">
+      <span class="present-count" id="presentCount">0</span> Present &nbsp;|&nbsp;
+      <span class="absent-count" id="absentCount">0</span> Absent
+    </div>
+  </div>
+
+  <div class="att-search">
+    <i class="fas fa-search"></i>
+    <input type="text" id="attSearch" placeholder="Search by name, email, or reg. number..." oninput="filterAttendance()"/>
+    <button type="button" class="btn btn-sm btn-ghost" onclick="document.getElementById('attSearch').value='';filterAttendance()" style="font-size:0.78rem;padding:4px 8px;"><i class="fas fa-times"></i></button>
+  </div>
+
+  <form method="POST" id="attendanceForm">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>#</th><th>Student</th><th>Reg. Number</th><th>Department</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for reg, student in registrations %}
+          <tr id="row-{{ student.id }}" data-name="{{ student.name|lower }}" data-email="{{ student.email|lower }}" data-reg="{{ (student.reg_number or '')|lower }}">
+            <td class="text-muted">{{ loop.index }}</td>
+            <td>
+              <div class="cell-user">
+                <span class="mini-avatar">{{ student.name[0] }}</span>
+                <div>
+                  <strong>{{ student.name }}</strong><br/>
+                  <small class="text-muted">{{ student.email }}</small>
+                </div>
+              </div>
+            </td>
+            <td>{{ student.reg_number or '—' }}</td>
+            <td>{{ student.department or '—' }}</td>
+            <td>
+              <div class="att-toggle">
+                <label class="toggle-label">
+                  <input type="radio" name="attendance_{{ student.id }}" value="present"
+                    {% if attendance_map.get(student.id) == 'present' %}checked{% endif %}
+                    onchange="updateRow({{ student.id }}, 'present')"/>
+                  <span class="toggle-present">Present</span>
+                </label>
+                <label class="toggle-label">
+                  <input type="radio" name="attendance_{{ student.id }}" value="absent"
+                    {% if attendance_map.get(student.id, 'absent') == 'absent' %}checked{% endif %}
+                    onchange="updateRow({{ student.id }}, 'absent')"/>
+                  <span class="toggle-absent">Absent</span>
+                </label>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions" style="padding: 1rem 1.5rem;">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Attendance</button>
+      <p class="text-muted" style="margin: 0; font-size: 0.85rem;">Students marked Present can download certificates.</p>
+    </div>
+  </form>
+  {% else %}
+    <div class="empty-state"><i class="fas fa-user-times"></i><p>No students registered for this event yet.</p></div>
+  {% endif %}
+</div>
+
+<style>
+.att-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  margin: 0 0 0 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+}
+.att-search i {
+  color: var(--navy-light);
+  font-size: 1rem;
+}
+.att-search input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg, #fff);
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--text);
+  font-family: inherit;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.att-search input:focus {
+  border-color: var(--navy-light);
+  box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+}
+.att-search input::placeholder {
+  color: var(--text-muted);
+}
+[data-theme="dark"] .att-search input {
+  background: var(--off-white);
+  border-color: var(--border);
+}
+[data-theme="dark"] .att-search input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,182,90,0.15);
+}
+</style>
+
+<script>
+function filterAttendance() {
+  var term = document.getElementById('attSearch').value.toLowerCase();
+  var rows = document.querySelectorAll('#attendanceForm tbody tr');
+  rows.forEach(function(row) {
+    var name = row.getAttribute('data-name') || '';
+    var email = row.getAttribute('data-email') || '';
+    var reg = row.getAttribute('data-reg') || '';
+    var match = name.indexOf(term) > -1 || email.indexOf(term) > -1 || reg.indexOf(term) > -1;
+    row.style.display = match ? '' : 'none';
+  });
+}
+
+function markAll(status) {
+  document.querySelectorAll('#attendanceForm tbody tr:not([style*="none"]) input[value="' + status + '"]').forEach(function(r) {
+    r.checked = true;
+    var id = r.name.split('_')[1];
+    updateRow(id, status);
+  });
+}
+
+function updateRow(id, status) {
+  var row = document.getElementById('row-' + id);
+  row.classList.toggle('row-present', status === 'present');
+  row.classList.toggle('row-absent', status === 'absent');
+  updateCount();
+}
+
+function updateCount() {
+  var present = document.querySelectorAll('input[value="present"]:checked').length;
+  var absent = document.querySelectorAll('input[value="absent"]:checked').length;
+  document.getElementById('presentCount').textContent = present;
+  document.getElementById('absentCount').textContent = absent;
+}
+
+document.addEventListener('DOMContentLoaded', updateCount);
+</script>
+{% endblock %}

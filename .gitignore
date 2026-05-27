@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Database
+*.db
+instance/
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+package-lock.json
+package.json
+
+# Uploads
+static/uploads/*.pdf
+static/uploads/*.png
+static/uploads/*.jpg
+static/uploads/signatures/
+
+# Environment
+.env
+*.env.local
+
+# Mirror
+campuscore01/
+
+# Vercel
+vercel.json
+api/
+
+# Migrations (keep version files, remove auto-generated)
+migrations/__pycache__/
+
+# Config (if contains secrets)
+config/*.py
+!config/__init__.py
+
+# OS
+Thumbs.db

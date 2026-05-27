@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Participants — {{ event.title }}{% endblock %}
+{% block page_title %}<i class="fas fa-users"></i> {{ event.title[:30] ~ '...' if event.title|length > 30 else event.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-heading">Participants</h1><p class="page-sub"><i class="fas fa-calendar"></i> {{ event.date.strftime('%d %B %Y') }} &middot; <i class="fas fa-users"></i> {{ registrations|length }} registered</p></div>
+  <div class="action-btns">
+    <a href="{{ url_for('organizer_manage_attendance', event_id=event.id) }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+    <a href="{{ url_for('organizer_export_participants', event_id=event.id) }}" class="btn btn-primary"><i class="fas fa-download"></i> Export CSV</a>
+  </div>
+</div>
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="input-wrap search-wrap"><i class="fas fa-search"></i><input type="text" name="search" placeholder="Search participants..." value="{{ search }}"/></div>
+    <button type="submit" class="btn btn-outline">Search</button>
+    {% if search %}<a href="{{ url_for('organizer_event_participants', event_id=event.id) }}" class="btn btn-ghost">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Participant ID</th><th>Name</th><th>Email</th><th>College</th><th>Department</th><th>Registered</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for reg, stu in registrations %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td><code style="font-size:0.8rem;color:var(--navy);">{{ stu.participant_id or '—' }}</code></td>
+          <td><div class="cell-user"><span class="mini-avatar">{{ stu.name[0] }}</span><strong>{{ stu.name }}</strong></div></td>
+          <td>{{ stu.email }}</td>
+          <td>{{ stu.college or '—' }}</td>
+          <td>{{ stu.department or '—' }}</td>
+          <td class="text-muted">{{ reg.registered_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('organizer_remove_participant', event_id=event.id, uid=stu.id) }}" onsubmit="return confirm('Remove {{ stu.name }} from this event?')" style="display:inline">
+              <button type="submit" class="btn btn-sm btn-danger" title="Remove"><i class="fas fa-user-minus"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state"><i class="fas fa-user-plus"></i><p>No participants registered yet</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

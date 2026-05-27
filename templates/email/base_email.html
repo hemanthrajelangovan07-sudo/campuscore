@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table style="width:100%;max-width:600px;margin:0 auto;padding:20px 12px;">
+    <tr>
+      <td style="background:#1a2744;border-radius:8px 8px 0 0;padding:28px 32px;text-align:center;">
+        <h1 style="font-family:'Playfair Display',Georgia,serif;margin:0;color:#ffffff;font-size:1.4rem;letter-spacing:0.5px;">
+          <span style="color:#c9a84c;">✦</span> CampusCore <span style="color:#c9a84c;">SIST</span>
+        </h1>
+        <p style="margin:4px 0 0;color:#94a3b8;font-size:0.78rem;">Sathyabama Institute of Science and Technology</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background:#ffffff;padding:36px 32px;">
+        {% block content %}{% endblock %}
+      </td>
+    </tr>
+    <tr>
+      <td style="background:#f8f9fb;border-radius:0 0 8px 8px;padding:20px 32px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:0.78rem;color:#94a3b8;">Sathyabama Institute of Science and Technology</p>
+        <p style="margin:0;font-size:0.75rem;color:#b0b8c8;">© {{ year if year else '2025' }} CampusCore · This is an automated message</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

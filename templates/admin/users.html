@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block page_title %}<i class="fas fa-users"></i> User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-heading">All Users</h1><p class="page-sub">{{ users|length }} user(s)</p></div>
+  <div class="action-btns">
+    <a href="{{ url_for('admin_export_users', search=search, role=role_filter) }}" class="btn btn-outline"><i class="fas fa-download"></i> Export CSV</a>
+    <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add User</a>
+  </div>
+</div>
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="input-wrap search-wrap"><i class="fas fa-search"></i><input type="text" name="search" placeholder="Search by name or email..." value="{{ search }}"/></div>
+    <select name="role" onchange="this.form.submit()">
+      <option value="">All Roles</option>
+      <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+      <option value="organizer" {% if role_filter == 'organizer' %}selected{% endif %}>Organizer</option>
+      <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Student</option>
+    </select>
+    <button type="submit" class="btn btn-outline">Filter</button>
+    {% if search or role_filter %}<a href="{{ url_for('admin_users') }}" class="btn btn-ghost">Clear</a>{% endif %}
+  </form>
+</div>
+
+<div id="bulk-bar" class="bulk-action-bar" style="display:none;">
+  <span id="bulk-count" class="bulk-count">0 selected</span>
+  <div class="bulk-actions">
+    <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')"><i class="fas fa-trash"></i> Delete</button>
+    <button class="btn btn-sm btn-primary" onclick="bulkExport()"><i class="fas fa-download"></i> Export CSV</button>
+    <button class="btn btn-sm btn-ghost" onclick="clearSelection()">Deselect All</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table" id="users-table">
+      <thead>
+        <tr>
+          <th style="width:40px;"><input type="checkbox" id="select-all" onchange="toggleAll(this)" style="width:16px;height:16px;cursor:pointer;"/></th>
+          <th>Participant ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>College</th>
+          <th>Registered</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-id="{{ u.id }}">
+          <td><input type="checkbox" class="user-check" value="{{ u.id }}" onchange="updateBulkBar()" style="width:16px;height:16px;cursor:pointer;"/></td>
+          <td><code style="font-size:0.8rem;color:var(--navy);">{{ u.participant_id or '—' }}</code></td>
+          <td><div class="cell-user"><span class="mini-avatar">{{ u.name[0] }}</span><strong>{{ u.name }}</strong>{% if u.force_password_reset %} <i class="fas fa-lock" style="color:var(--amber);font-size:0.78rem;" title="Password reset pending"></i>{% endif %}</div></td>
+          <td>{{ u.email }}</td>
+          <td><span class="badge {% if u.role == 'admin' %}badge-admin{% elif u.role == 'organizer' %}badge-org{% else %}badge-student{% endif %}">{{ u.role|title }}</span></td>
+          <td>{{ u.college or '—' }}</td>
+          <td class="text-muted">{{ u.created_at.strftime('%d %b %Y') }}</td>
+          <td>{% if u.last_login %}<span class="text-muted" style="font-size:0.82rem;">{{ u.last_login.strftime('%d %b %Y') }}</span>{% else %}<span class="badge badge-absent" style="font-size:0.72rem;">Never</span>{% endif %}</td>
+          <td>
+            <div class="action-btns">
+              <a href="{{ url_for('admin_user_detail', uid=u.id) }}" class="btn btn-sm btn-ghost" title="View"><i class="fas fa-eye"></i></a>
+              <a href="{{ url_for('admin_edit_user', uid=u.id) }}" class="btn btn-sm btn-outline" title="Edit"><i class="fas fa-edit"></i></a>
+              {% if u.id != session.user_id %}
+              <form method="POST" action="{{ url_for('admin_delete_user', uid=u.id) }}" onsubmit="return confirm('Delete {{ u.name }}?')" style="display:inline">
+                <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty-state"><i class="fas fa-users"></i><p>No users found</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.bulk-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.bulk-count {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bulk-action-bar .btn {
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+.bulk-action-bar .btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.5);
+}
+.bulk-action-bar .btn-danger {
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+.bulk-action-bar .btn-danger:hover {
+  background: #dc2626;
+  color: #fff;
+}
+.bulk-action-bar .btn-ghost {
+  border: none;
+}
+</style>
+
+<script>
+const selected = new Set();
+const checkboxes = () => document.querySelectorAll('.user-check');
+
+function updateBulkBar() {
+  selected.clear();
+  checkboxes().forEach(cb => { if (cb.checked) selected.add(cb.value); });
+  const bar = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  if (selected.size > 0) {
+    bar.style.display = 'flex';
+    count.textContent = selected.size + ' user' + (selected.size > 1 ? 's' : '') + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function toggleAll(master) {
+  checkboxes().forEach(cb => cb.checked = master.checked);
+  updateBulkBar();
+}
+
+function clearSelection() {
+  checkboxes().forEach(cb => cb.checked = false);
+  document.getElementById('select-all').checked = false;
+  updateBulkBar();
+}
+
+async function bulkAction(action) {
+  const ids = Array.from(selected);
+  if (ids.length === 0) return;
+
+  if (action === 'delete') {
+    if (!confirm('Delete ' + ids.length + ' selected user(s)? This cannot be undone.')) return;
+  }
+
+  try {
+    const resp = await fetch('{{ url_for("admin_bulk_users") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, action })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      location.reload();
+    } else {
+      alert('Error: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Request failed.');
+  }
+}
+
+async function bulkExport() {
+  const ids = Array.from(selected);
+  if (ids.length === 0) return;
+
+  try {
+    const resp = await fetch('{{ url_for("admin_bulk_export_users") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
+    if (!resp.ok) { alert('Export failed.'); return; }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected_users.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Export failed.');
+  }
+}
+</script>
+{% endblock %}

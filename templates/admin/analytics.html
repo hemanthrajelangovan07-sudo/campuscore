@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}<i class="fas fa-chart-bar"></i> Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Event Analytics</h1>
+    <p class="page-sub">Registration and attendance overview across all events</p>
+  </div>
+</div>
+
+{% set total_events = event_analytics | length %}
+{% set total_regs = event_analytics | sum(attribute='total_registrations') %}
+{% set total_pres = event_analytics | sum(attribute='total_present') %}
+{% set avg_rate = ((event_analytics | sum(attribute='attendance_rate') / total_events) | round(1)) if total_events else 0 %}
+
+{# KPI Cards #}
+<div class="stats-grid">
+  <div class="stat-card stat-blue" style="animation-delay:0s;">
+    <i class="fas fa-calendar-alt stat-icon"></i>
+    <div>
+      <span class="stat-value">{{ total_events }}</span>
+      <span class="stat-label">Total Events</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card stat-teal" style="animation-delay:0.05s;">
+    <i class="fas fa-user-check stat-icon"></i>
+    <div>
+      <span class="stat-value">{{ total_regs }}</span>
+      <span class="stat-label">Total Registrations</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card stat-green" style="animation-delay:0.1s;">
+    <i class="fas fa-users stat-icon"></i>
+    <div>
+      <span class="stat-value">{{ total_pres }}</span>
+      <span class="stat-label">Total Attendees</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+  <div class="stat-card stat-gold" style="animation-delay:0.15s;">
+    <i class="fas fa-percent stat-icon"></i>
+    <div>
+      <span class="stat-value">{{ avg_rate }}%</span>
+      <span class="stat-label">Avg Attendance Rate</span>
+    </div>
+    <div class="stat-wave"></div>
+  </div>
+</div>
+
+
+{% set cat_total = (cat_counts | sum) if cat_labels else 0 %}
+
+{# Two charts side by side #}
+{% if cat_labels %}
+<div class="chart-grid">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-simple"></i> Registrations by Category</h3>
+      <div class="chart-toolbar">
+        <span class="chart-summary"><strong>{{ cat_total }}</strong> total</span>
+        <div class="chart-controls">
+          <select id="sortSelect">
+            <option value="count">Sort by Count</option>
+            <option value="name">Sort by Name</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-chart-body">
+      <div class="chart-canvas-wrap">
+        <canvas id="catChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-chart-pie"></i> Category Distribution</h3>
+      <span class="chart-summary"><strong>{{ cat_total }}</strong> total registrations</span>
+    </div>
+    <div class="card-chart-body doughnut-body">
+      <div class="doughnut-wrap">
+        <canvas id="doughnutChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# Per-Event Table #}
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-table"></i> Per-Event Breakdown</h3>
+    <div class="table-search-wrap">
+      <i class="fas fa-search"></i>
+      <input type="search" id="tableSearch" placeholder="Search events…"/>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="analyticsTable">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Category</th>
+          <th>Date</th>
+          <th class="text-center">Registered</th>
+          <th class="text-center">Present</th>
+          <th class="text-center">Absent</th>
+          <th>Attendance Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in event_analytics %}
+        <tr>
+          <td class="cell-event">{{ a.title }}</td>
+          <td><span class="badge badge-cat">{{ a.category }}</span></td>
+          <td class="date-cell"><i class="far fa-calendar"></i>{{ a.date }}</td>
+          <td class="text-center fw-medium">{{ a.total_registrations }}</td>
+          <td class="text-center"><span class="badge badge-present">{{ a.total_present }}</span></td>
+          <td class="text-center"><span class="badge badge-absent">{{ a.total_absent }}</span></td>
+          <td>
+            <div class="rate-bar">
+              <div class="rate-track">
+                <div class="rate-fill
+                  {% if a.attendance_rate >= 75 %}rate-high
+                  {% elif a.attendance_rate >= 50 %}rate-mid
+                  {% else %}rate-low{% endif %}"
+                  style="width: {{ a.attendance_rate }}%;">
+                </div>
+              </div>
+              <span class="rate-label">{{ a.attendance_rate }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="empty-cell">
+            <div class="empty-state">
+              <i class="fas fa-chart-simple"></i>
+              <p>No events found.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block head %}
+<style>
+/* ── Table Search ── */
+.table-search-wrap {
+  position: relative;
+  width: 200px;
+}
+.table-search-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  z-index: 1;
+}
+.table-search-wrap input {
+  width: 100%;
+  padding: 7px 12px 7px 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  background: var(--off-white);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.table-search-wrap input:focus {
+  border-color: var(--navy-light);
+  background: var(--off-white);
+}
+
+/* ── Event Name Cell ── */
+.cell-event {
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Rate Bar ── */
+.rate-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rate-track {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.rate-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+.rate-high { background: var(--green); }
+.rate-mid { background: #f59e0b; }
+.rate-low { background: var(--red); }
+.rate-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 38px;
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ── Table column alignment ── */
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-right: 20px;
+}
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: 20px;
+}
+
+/* ── Empty State ── */
+.empty-cell { padding: 0 !important; }
+
+/* ── Chart Grid ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.card-chart-body {
+  height: 320px;
+  padding: 12px 16px;
+}
+.chart-canvas-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.chart-controls select {
+  padding: 5px 28px 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  background: var(--off-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8499'/%3E%3C/svg%3E") no-repeat right 8px center;
+  color: var(--text);
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+.chart-controls select:focus {
+  border-color: var(--navy-light);
+}
+.chart-summary {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.chart-summary strong {
+  color: var(--text);
+}
+
+/* ── Doughnut ── */
+.doughnut-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+.doughnut-wrap {
+  width: 260px;
+  height: 260px;
+  position: relative;
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] .page-heading { color: var(--text); }
+[data-theme="dark"] .card-header h3 { color: var(--text); }
+[data-theme="dark"] .stat-blue { background: linear-gradient(135deg, #1a3a6b, #2d5aa0); }
+[data-theme="dark"] .stat-gold { background: linear-gradient(135deg, #8a7030, var(--gold)); }
+[data-theme="dark"] .stat-teal { background: linear-gradient(135deg, #0f766e, #2dd4bf); }
+[data-theme="dark"] .stat-green { background: linear-gradient(135deg, #166534, #4ade80); }
+[data-theme="dark"] .card-chart-body { background: var(--off-white); }
+[data-theme="dark"] .chart-controls select {
+  background-color: var(--white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .chart-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .card-chart-body { height: 280px; }
+  .doughnut-wrap { width: 220px; height: 220px; }
+  .table-search-wrap { width: 160px; }
+  .cell-event { max-width: 120px; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var rootStyle = getComputedStyle(document.documentElement);
+  var navy   = rootStyle.getPropertyValue('--navy').trim() || '#1a3a6b';
+  var gold   = rootStyle.getPropertyValue('--gold').trim() || '#C9A84C';
+  var teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
+  var green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
+  var red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
+  var textMuted = rootStyle.getPropertyValue('--text-muted').trim() || '#7a8499';
+  var border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
+  var whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
+
+  var palette = [navy, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+
+  Chart.defaults.color = textMuted;
+  Chart.defaults.borderColor = border;
+
+  {% if cat_labels %}
+  var catLabels = {{ cat_labels | tojson }};
+  var catCounts = {{ cat_counts | tojson }};
+
+  // ── Bar Chart ────────────────────────────────────────────────────────
+  function barSort(order) {
+    var indices = catLabels.map(function (_, i) { return i; });
+    if (order === 'name') {
+      indices.sort(function (a, b) { return catLabels[a].localeCompare(catLabels[b]); });
+    } else {
+      indices.sort(function (a, b) { return catCounts[b] - catCounts[a]; });
+    }
+    return {
+      labels: indices.map(function (i) { return catLabels[i]; }),
+      data:   indices.map(function (i) { return catCounts[i]; }),
+    };
+  }
+
+  var barData = barSort('count');
+  var catChart = new Chart(document.getElementById('catChart'), {
+    type: 'bar',
+    data: {
+      labels: barData.labels,
+      datasets: [{
+        data: barData.data,
+        backgroundColor: barData.labels.map(function (_, i) { return palette[i % palette.length]; }),
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            title: function (items) { return items[0].label; },
+            label: function (ctx) { return ' ' + ctx.parsed.y + ' registrations'; },
+          },
+        },
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: border } },
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: '500' } } },
+      },
+      onClick: function (e, items) {
+        if (items.length > 0) {
+          var label = this.data.labels[items[0].index];
+          var input = document.getElementById('tableSearch');
+          if (input) { input.value = label; input.dispatchEvent(new Event('input')); }
+        }
+      },
+    },
+  });
+
+  document.getElementById('sortSelect').addEventListener('change', function () {
+    var d = barSort(this.value);
+    catChart.data.labels = d.labels;
+    catChart.data.datasets[0].data = d.data;
+    catChart.data.datasets[0].backgroundColor = d.labels.map(function (_, i) { return palette[i % palette.length]; });
+    catChart.update();
+  });
+
+  // ── Doughnut Chart ───────────────────────────────────────────────────
+  var doughnutChart = new Chart(document.getElementById('doughnutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{
+        data: catCounts,
+        backgroundColor: catLabels.map(function (_, i) { return palette[i % palette.length]; }),
+        borderColor: whiteBg,
+        borderWidth: 3,
+        borderRadius: 4,
+        spacing: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '60%',
+      animation: { animateRotate: true, duration: 600, easing: 'easeOutQuart' },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 12,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            font: { size: 11, weight: '500' },
+            generateLabels: function (chart) {
+              var ds = chart.data.datasets[0];
+              var total = ds.data.reduce(function (a, b) { return a + b; }, 0);
+              return chart.data.labels.map(function (label, i) {
+                var pct = total ? ((ds.data[i] / total) * 100).toFixed(1) : '0.0';
+                return {
+                  text: label + '  (' + pct + '%)',
+                  fillStyle: palette[i % palette.length],
+                  strokeStyle: 'transparent',
+                  pointStyle: 'circle',
+                  index: i,
+                  datasetIndex: 0,
+                };
+              });
+            },
+          },
+          onClick: function (e, item, legend) {
+            legend.chart.toggleDataVisibility(item.index);
+            legend.chart.update();
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: function (ctx) {
+              var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+              var pct = total ? ((ctx.parsed / total) * 100).toFixed(1) : '0.0';
+              return ' ' + ctx.parsed + ' registrations (' + pct + '%)';
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // ── Theme switch ─────────────────────────────────────────────────────
+  function refreshColors() {
+    rootStyle = getComputedStyle(document.documentElement);
+    navy   = rootStyle.getPropertyValue('--navy').trim() || '#1a3a6b';
+    gold   = rootStyle.getPropertyValue('--gold').trim() || '#C9A84C';
+    teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
+    green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
+    red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
+    textMuted = rootStyle.getPropertyValue('--text-muted').trim() || '#7a8499';
+    border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
+    whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
+    palette = [navy, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+    Chart.defaults.color = textMuted;
+    Chart.defaults.borderColor = border;
+    if (typeof catChart !== 'undefined') catChart.update();
+    if (typeof doughnutChart !== 'undefined') doughnutChart.update();
+  }
+  var observer = new MutationObserver(function (m) {
+    m.forEach(function (mut) {
+      if (mut.type === 'attributes' && mut.attributeName === 'data-theme') refreshColors();
+    });
+  });
+  observer.observe(document.documentElement, { attributes: true });
+  {% endif %}
+
+  // ── Table search ─────────────────────────────────────────────────────
+  var searchInput = document.getElementById('tableSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      var term = this.value.toLowerCase();
+      document.querySelectorAll('#analyticsTable tbody tr').forEach(function (row) {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

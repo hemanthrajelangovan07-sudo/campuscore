@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}<i class="fas fa-user"></i> Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">My Profile</h1>
+    <p class="page-sub">Manage your personal information</p>
+  </div>
+</div>
+
+<div class="card" style="max-width: 640px;">
+  {% if edit_mode %}
+  <form method="POST" style="padding: 24px;">
+    <div class="form-section">
+      <h4 class="form-section-title"><i class="fas fa-user-edit"></i> Edit Profile</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" name="first_name" value="{{ user.first_name or user.name.split()[0] }}" required/>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" name="last_name" value="{{ user.last_name or user.name.split()[1] if user.name.split()|length > 1 else '' }}"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Email *</label>
+        <input type="email" name="email" value="{{ user.email }}" required/>
+      </div>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>College</label>
+        <input type="text" name="college" value="{{ user.college or '' }}" placeholder="Sathyabama Institute of Science and Technology"/>
+      </div>
+    </div>
+    <div class="form-actions">
+      <a href="{{ url_for('organizer_profile') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+  </form>
+  {% else %}
+  <div style="padding: 24px;">
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--navy-light)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700;">{{ user.name[0] }}</div>
+      <div>
+        <h2 style="font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--navy);">{{ user.name }}</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fas fa-envelope"></i> {{ user.email }}</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+      <div>
+        <small style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">First Name</small>
+        <p style="font-weight: 500;">{{ user.first_name or user.name.split()[0] }}</p>
+      </div>
+      <div>
+        <small style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Last Name</small>
+        <p style="font-weight: 500;">{{ user.last_name or (user.name.split()[1] if user.name.split()|length > 1 else '') or '—' }}</p>
+      </div>
+      <div>
+        <small style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Email</small>
+        <p style="font-weight: 500;">{{ user.email }}</p>
+      </div>
+      <div>
+        <small style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">College</small>
+        <p style="font-weight: 500;">{{ user.college or '—' }}</p>
+      </div>
+    </div>
+
+    <a href="?edit=1" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Profile</a>
+
+    <div class="info-banner" style="margin-top: 24px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 16px 20px; display: flex; gap: 12px; align-items: flex-start;">
+      <i class="fas fa-info-circle" style="color: var(--navy); font-size: 1.1rem; margin-top: 2px;"></i>
+      <div>
+        <strong style="font-size: 0.88rem; color: var(--navy);">Organizer Information</strong>
+        <p style="font-size: 0.82rem; color: #1e40af; margin-top: 4px; line-height: 1.6;">As an organizer, you can create and manage events.</p>
+        <ul style="font-size: 0.82rem; color: #1e40af; margin-top: 6px; padding-left: 18px; line-height: 1.8;">
+          <li>Create new events</li>
+          <li>Manage your existing events</li>
+          <li>View participant registrations</li>
+          <li>Send announcements to participants</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

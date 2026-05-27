@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block page_title %}<i class="fas fa-bullhorn"></i> Announcements{% endblock %}
+
+{% block head %}
+<style>
+  .ann-page { max-width: 900px; }
+
+  .compose-body { padding: 1.5rem 1.6rem 1.6rem; }
+  .compose-body textarea {
+    width: 100%; resize: vertical; min-height: 130px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem; font-size: 1rem; color: var(--text);
+    background: var(--off-white); transition: border-color .2s, box-shadow .2s; outline: none;
+  }
+  .compose-body textarea:focus {
+    border-color: var(--navy-light); box-shadow: 0 0 0 4px rgba(37,81,160,.08); background: var(--white);
+  }
+  .compose-body textarea::placeholder { color: var(--text-muted); }
+
+  .char-ok   { font-size: .82rem; color: var(--text-muted); }
+  .char-warn { color: #d97706; }
+  .char-over { color: var(--red); font-weight: 600; }
+
+  .priority-section { margin: 1.2rem 0 1.4rem; }
+  .priority-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: .8rem;
+  }
+  .priority-label {
+    font-size: .88rem; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .06em; display: block;
+  }
+  .priority-suggest {
+    font-size: .8rem; font-weight: 600; padding: .3rem .8rem;
+    border-radius: 20px; opacity: 0; transition: all .35s ease;
+    transform: translateY(4px); pointer-events: none;
+  }
+  .priority-suggest.show {
+    opacity: 1; transform: translateY(0);
+  }
+  .priority-suggest.sg-info { background: #eef0fd; color: #4361ee; }
+  .priority-suggest.sg-warning { background: #fffbeb; color: #b45309; }
+  .priority-suggest.sg-urgent { background: #fef2f2; color: #b91c1c; }
+  [data-theme="dark"] .priority-suggest.sg-info { background: #1e2a4a; color: #93c5fd; }
+  [data-theme="dark"] .priority-suggest.sg-warning { background: #2a241a; color: #fde68a; }
+  [data-theme="dark"] .priority-suggest.sg-urgent { background: #2a1a1a; color: #fca5a5; }
+
+  .priority-group { display: flex; gap: 1rem; }
+  .priority-group input[type="radio"] { display: none; }
+  .priority-card {
+    flex: 1; display: flex; align-items: center; gap: .7rem;
+    padding: .9rem 1rem; border-radius: var(--radius-sm);
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--off-white); color: var(--text-muted);
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    user-select: none; font-size: .92rem; font-weight: 600;
+    position: relative; overflow: hidden;
+  }
+  .priority-card:hover { border-color: var(--text-muted); transform: translateY(-1px); }
+  .priority-card .p-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem; flex-shrink: 0; transition: all .3s;
+    background: var(--border); color: var(--text-muted);
+  }
+  .priority-card .p-label { flex: 1; }
+  .priority-card .p-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    transition: all .25s; display: flex; align-items: center; justify-content: center;
+  }
+  .priority-card .p-check::after {
+    content: ''; width: 12px; height: 12px; border-radius: 50%;
+    background: transparent; transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    transform: scale(0);
+  }
+  .priority-card .p-glow {
+    position: absolute; inset: 0; border-radius: inherit;
+    opacity: 0; transition: opacity .4s;
+    pointer-events: none;
+  }
+  input#p-info:checked ~ label[for="p-info"] {
+    background: #eef0fd; border-color: #4361ee;
+    box-shadow: 0 2px 12px rgba(67,97,238,.15);
+  }
+  input#p-info:checked ~ label[for="p-info"] .p-icon { background: #4361ee; color: #fff; }
+  input#p-info:checked ~ label[for="p-info"] .p-check { border-color: #4361ee; }
+  input#p-info:checked ~ label[for="p-info"] .p-check::after { background: #4361ee; transform: scale(1); }
+  input#p-warning:checked ~ label[for="p-warning"] {
+    background: #fffbeb; border-color: #f59e0b;
+    box-shadow: 0 2px 12px rgba(245,158,11,.15);
+  }
+  input#p-warning:checked ~ label[for="p-warning"] .p-icon { background: #f59e0b; color: #fff; }
+  input#p-warning:checked ~ label[for="p-warning"] .p-check { border-color: #f59e0b; }
+  input#p-warning:checked ~ label[for="p-warning"] .p-check::after { background: #f59e0b; transform: scale(1); }
+  input#p-urgent:checked ~ label[for="p-urgent"] {
+    background: #fef2f2; border-color: #ef4444;
+    box-shadow: 0 2px 12px rgba(239,68,68,.15);
+  }
+  input#p-urgent:checked ~ label[for="p-urgent"] .p-icon { background: #ef4444; color: #fff; }
+  input#p-urgent:checked ~ label[for="p-urgent"] .p-check { border-color: #ef4444; }
+  input#p-urgent:checked ~ label[for="p-urgent"] .p-check::after { background: #ef4444; transform: scale(1); }
+  [data-theme="dark"] input#p-info:checked ~ label[for="p-info"] {
+    background: #1e2a4a; border-color: #4f6ef7;
+  }
+  [data-theme="dark"] input#p-info:checked ~ label[for="p-info"] .p-icon { background: #4f6ef7; }
+  [data-theme="dark"] input#p-warning:checked ~ label[for="p-warning"] {
+    background: #2a241a; border-color: #f59e0b;
+  }
+  [data-theme="dark"] input#p-urgent:checked ~ label[for="p-urgent"] {
+    background: #2a1a1a; border-color: #ef4444;
+  }
+
+  @keyframes urgentPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.2); }
+    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  }
+  .priority-card.p-urgent-unchecked {
+    animation: urgentPulse 2s ease-in-out infinite;
+  }
+
+  .ann-item {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.3rem 1.6rem; border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .ann-item:last-child { border-bottom: none; }
+  .ann-item:hover { background: var(--off-white); }
+
+  .ann-stripe {
+    width: 4px; border-radius: 4px; align-self: stretch;
+    min-height: 50px; flex-shrink: 0;
+  }
+  .stripe-info    { background: #4361ee; }
+  .stripe-warning { background: #f59e0b; }
+  .stripe-urgent  { background: var(--red); }
+
+  .ann-content { flex: 1; min-width: 0; }
+
+  .priority-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .78rem; font-weight: 700; padding: .3rem .75rem;
+    border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .badge-info    { background: #eef0fd; color: #4361ee; }
+  .badge-warning { background: #fffbeb; color: #b45309; }
+  .badge-urgent  { background: #fef2f2; color: #b91c1c; }
+  [data-theme="dark"] .badge-info { background: #1e2a4a; color: #93c5fd; }
+  [data-theme="dark"] .badge-warning { background: #2a241a; color: #fde68a; }
+  [data-theme="dark"] .badge-urgent { background: #2a1a1a; color: #fca5a5; }
+
+  .ann-message {
+    font-size: 1rem; color: var(--text);
+    font-weight: 500; line-height: 1.6; margin: .45rem 0 .5rem;
+  }
+  .ann-meta { font-size: .82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: .9rem; align-items: center; }
+  .ann-meta i { font-size: .75rem; margin-right: .3rem; }
+
+  .btn-del {
+    display: flex; align-items: center; gap: .4rem;
+    border: 1.5px solid #fecaca; color: var(--red);
+    background: transparent; border-radius: var(--radius-sm);
+    padding: .4rem .8rem; font-size: .85rem; cursor: pointer;
+    transition: all .15s; white-space: nowrap; align-self: center;
+  }
+  .btn-del:hover { background: #fef2f2; border-color: var(--red); }
+  [data-theme="dark"] .btn-del { border-color: #991b1b; }
+  [data-theme="dark"] .btn-del:hover { background: #2a1a1a; }
+
+  .empty-state-ann {
+    text-align: center; padding: 4rem 2.5rem; color: var(--text-muted);
+  }
+  .empty-state-ann i { font-size: 3rem; opacity: .35; display: block; margin-bottom: 1rem; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ann-item-new { animation: slideDown .35s ease forwards; }
+
+  /* ── Dark Mode ── */
+  [data-theme="dark"] .page-heading { color: var(--text); }
+  [data-theme="dark"] .card-header h3 { color: var(--text); }
+  [data-theme="dark"] .btn-primary { background: var(--navy-light); }
+  [data-theme="dark"] .btn-primary:hover { background: var(--navy); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ann-page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-heading">Announcements</h1>
+      <p class="page-sub">Broadcast live messages to all connected users</p>
+    </div>
+    <span class="badge badge-cat" id="countBadge">{{ announcements|length }} total</span>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3><i class="fas fa-pen-to-square"></i> New Broadcast</h3>
+      <span class="text-muted" style="font-size:.92rem;">Visible to all students instantly</span>
+    </div>
+    <form method="POST" id="composeForm">
+      <div class="compose-body">
+        <textarea id="messageArea" name="message" rows="3" maxlength="1000" placeholder="Write your announcement here…"></textarea>
+        <div class="d-flex justify-content-end mt-1">
+          <span class="char-ok" id="charCount">0 / 1000</span>
+        </div>
+
+        <div class="priority-section">
+          <div class="priority-header">
+            <span class="priority-label">Priority level</span>
+            <span class="priority-suggest" id="suggestBadge"></span>
+          </div>
+          <div class="priority-group">
+            <input type="radio" name="priority" id="p-info" value="info" checked>
+            <input type="radio" name="priority" id="p-warning" value="warning">
+            <input type="radio" name="priority" id="p-urgent" value="urgent">
+            <label class="priority-card" for="p-info">
+              <span class="p-icon"><i class="fas fa-circle-info"></i></span>
+              <span class="p-label">Info</span>
+              <span class="p-check"></span>
+            </label>
+            <label class="priority-card" for="p-warning">
+              <span class="p-icon"><i class="fas fa-triangle-exclamation"></i></span>
+              <span class="p-label">Warning</span>
+              <span class="p-check"></span>
+            </label>
+            <label class="priority-card p-urgent-unchecked" for="p-urgent">
+              <span class="p-icon"><i class="fas fa-circle-exclamation"></i></span>
+              <span class="p-label">Urgent</span>
+              <span class="p-check"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button type="submit" class="btn btn-primary" id="sendBtn"><i class="fas fa-paper-plane"></i> Send to All Students</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-clock-rotate-left"></i> Announcement History</h3>
+      <span class="text-muted" style="font-size:.92rem;" id="totalCount">{{ announcements|length }} total</span>
+    </div>
+    <div id="annList">
+      {% if announcements %}
+        {% for ann in announcements %}
+        <div class="ann-item" data-priority="{{ ann.priority }}" data-id="{{ ann.id }}">
+          <div class="ann-stripe stripe-{{ ann.priority }}"></div>
+          <div class="ann-content">
+            <span class="priority-badge badge-{{ ann.priority }}">
+              <i class="fas {{ {'info':'fa-circle-info', 'warning':'fa-triangle-exclamation', 'urgent':'fa-circle-exclamation'}[ann.priority] }}"></i>
+              {{ ann.priority_label }}
+            </span>
+            <p class="ann-message">{{ ann.message }}</p>
+            <div class="ann-meta">
+              <span><i class="far fa-clock"></i>{{ ann.formatted_time() }}</span>
+              <span><i class="far fa-user"></i>{{ ann.author_name }}</span>
+              <span><i class="fas fa-shield-halved"></i>{{ ann.author_role }}</span>
+            </div>
+          </div>
+          <button class="btn-del" data-action="delete" data-id="{{ ann.id }}"><i class="fas fa-trash-alt"></i> Delete</button>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state-ann" id="emptyState">
+          <i class="fas fa-bullhorn"></i>
+          <p class="fw-medium">No announcements yet</p>
+          <p class="small">Broadcast your first announcement above.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  const area    = document.getElementById('messageArea');
+  const counter = document.getElementById('charCount');
+  const list    = document.getElementById('annList');
+  const countBadge = document.getElementById('countBadge');
+  const totalSpan  = document.getElementById('totalCount');
+  const form    = document.getElementById('composeForm');
+
+  const stripeMap = { info:'stripe-info', warning:'stripe-warning', urgent:'stripe-urgent' };
+  const badgeMap  = { info:'badge-info',  warning:'badge-warning',  urgent:'badge-urgent'  };
+  const iconMap   = { info:'fa-circle-info', warning:'fa-triangle-exclamation', urgent:'fa-circle-exclamation' };
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  const URGENCY_KEYWORDS = {
+    urgent: [
+      'urgent', 'emergency', 'immediately', 'asap', 'critical', 'mandatory',
+      'deadline', 'last date', 'last day', 'final warning', ' suspended',
+      ' expelled', 'disciplinary', 'fee due', 'penalty', 'late fee',
+      ' required', 'must ', 'compulsory', 'action needed', 'important notice'
+    ],
+    warning: [
+      'important', 'reminder', 'notice', 'scheduled', 'changed', 'rescheduled',
+      'postponed', 'canceled', 'cancelled', 'maintenance', 'deadline approaching',
+      'due soon', 'limited', 'closing', 'deadline:', 'last chance',
+      'please note', ' update', 'revised', 'new timing', 'new date'
+    ]
+  };
+
+  let autoSuggested = null;
+
+  function detectPriority(text) {
+    const lower = text.toLowerCase();
+    for (const kw of URGENCY_KEYWORDS.urgent) {
+      if (lower.includes(kw)) return 'urgent';
+    }
+    for (const kw of URGENCY_KEYWORDS.warning) {
+      if (lower.includes(kw)) return 'warning';
+    }
+    return null;
+  }
+
+  const suggestBadge = document.getElementById('suggestBadge');
+  const urgentLabel = document.querySelector('label[for="p-urgent"]');
+
+  area.addEventListener('input', function () {
+    const n = area.value.length;
+    counter.textContent = n + ' / 1000';
+    counter.className = n > 950 ? 'char-over' : n > 800 ? 'char-warn' : 'char-ok';
+
+    const text = area.value.trim();
+    if (text.length < 10) {
+      suggestBadge.className = 'priority-suggest';
+      suggestBadge.textContent = '';
+      autoSuggested = null;
+      return;
+    }
+
+    const detected = detectPriority(text);
+    if (detected && detected !== autoSuggested) {
+      autoSuggested = detected;
+      document.getElementById('p-' + detected).checked = true;
+      const sgClass = 'sg-' + detected;
+      const labels = { urgent: 'Urgent', warning: 'Warning', info: 'Info' };
+      suggestBadge.className = 'priority-suggest show ' + sgClass;
+      suggestBadge.textContent = '\u26A1 Suggested: ' + labels[detected];
+    } else if (!detected) {
+      suggestBadge.className = 'priority-suggest';
+      suggestBadge.textContent = '';
+      autoSuggested = null;
+    }
+  });
+
+  document.querySelectorAll('.priority-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      suggestBadge.className = 'priority-suggest';
+      suggestBadge.textContent = '';
+      autoSuggested = null;
+      document.querySelectorAll('.priority-card').forEach(function (c) {
+        c.classList.toggle('p-urgent-unchecked', c.getAttribute('for') === 'p-urgent');
+      });
+    });
+  });
+
+  function clearForm() {
+    area.value = '';
+    counter.textContent = '0 / 1000';
+    counter.className = 'char-ok';
+  }
+  document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+  function showEmpty() {
+    const items = list.querySelectorAll('.ann-item');
+    if (items.length === 0 && !list.querySelector('#emptyState')) {
+      const es = document.createElement('div');
+      es.className = 'empty-state-ann';
+      es.id = 'emptyState';
+      es.innerHTML =
+        '<i class="fas fa-bullhorn"></i>' +
+        '<p class="fw-medium">No announcements yet</p>' +
+        '<p class="small">Broadcast your first announcement above.</p>';
+      list.appendChild(es);
+    }
+  }
+
+  function updateCounts() {
+    const items = list.querySelectorAll('.ann-item');
+    const n = items.length;
+    countBadge.textContent = n + ' total';
+    totalSpan.textContent = n + ' total';
+  }
+
+  function buildItem(msg, priority, time, author, role) {
+    const item = document.createElement('div');
+    item.className = 'ann-item ann-item-new';
+    item.dataset.priority = priority;
+    item.innerHTML =
+      '<div class="ann-stripe ' + stripeMap[priority] + '"></div>' +
+      '<div class="ann-content">' +
+        '<span class="priority-badge ' + badgeMap[priority] + '">' +
+          '<i class="fas ' + iconMap[priority] + '"></i> ' +
+          (priority.charAt(0).toUpperCase() + priority.slice(1)) +
+        '</span>' +
+        '<p class="ann-message">' + esc(msg) + '</p>' +
+        '<div class="ann-meta">' +
+          '<span><i class="far fa-clock"></i>' + esc(time) + '</span>' +
+          '<span><i class="far fa-user"></i>' + esc(author) + '</span>' +
+          '<span><i class="fas fa-shield-halved"></i>' + esc(role) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn-del" data-action="delete"><i class="fas fa-trash-alt"></i> Delete</button>';
+    return item;
+  }
+
+  function addAnnouncement(msg, priority, time, author, role, annId) {
+    const es = document.getElementById('emptyState');
+    if (es) es.remove();
+    const item = buildItem(msg, priority, time, author, role);
+    if (annId) item.dataset.id = annId;
+    list.insertBefore(item, list.firstChild);
+    updateCounts();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const msg = area.value.trim();
+    if (!msg) {
+      showToast('Please write a message first.');
+      return;
+    }
+    const p = document.querySelector('input[name="priority"]:checked').value;
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+
+    fetch(window.location.pathname, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ message: msg, priority: p })
+    }).then(function () {
+      window.location.reload();
+    }).catch(function () {
+      showToast('Failed to send. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send to All Students';
+    });
+  });
+
+  list.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action="delete"]');
+    if (!btn) return;
+    if (!confirm('Delete this announcement?')) return;
+    const item = btn.closest('.ann-item');
+    const annId = item.dataset.id;
+    if (!annId) {
+      item.remove();
+      updateCounts();
+      showEmpty();
+      return;
+    }
+    fetch(window.location.pathname + '/' + annId + '/delete', { method: 'POST' })
+      .then(function () {
+        item.style.transition = 'opacity .25s, transform .25s';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(12px)';
+        setTimeout(function () {
+          item.remove();
+          updateCounts();
+          showEmpty();
+        }, 250);
+      })
+      .catch(function () {
+        showToast('Failed to delete.');
+      });
+  });
+
+  function showToast(msg) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;min-width:280px;' +
+      'background:var(--white);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.15);' +
+      'border-left:4px solid var(--navy);padding:14px 18px;animation:slideIn .3s ease;';
+    el.innerHTML = '<strong style="font-size:.85rem;color:var(--text);">' + esc(msg) + '</strong>';
+    document.body.appendChild(el);
+    setTimeout(function () {
+      el.style.transition = 'opacity .5s';
+      el.style.opacity = '0';
+      setTimeout(function () { el.remove(); }, 500);
+    }, 3000);
+  }
+
+  updateCounts();
+
+  if (window._socket) {
+    window._socket.on('new_announcement', function (data) {
+      if (data.author_role === 'admin' || data.author_role === 'organizer') {
+        addAnnouncement(data.message, data.priority, data.time, data.author, data.author_role, data.id);
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

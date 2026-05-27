@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% block title %}User Detail — {{ user_obj.name }}{% endblock %}
+{% block page_title %}<i class="fas fa-user"></i> User Detail{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-heading">{{ user_obj.name }}</h1></div>
+  <div class="action-btns">
+    <button class="btn btn-outline" onclick="openNotifyModal()" style="border-color:var(--navy);color:var(--navy);"><i class="fas fa-envelope"></i> Send Email</button>
+    <a href="{{ url_for('admin_edit_user', uid=user_obj.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Users</a>
+  </div>
+</div>
+
+<div class="detail-grid">
+  {# ─── Profile Card ─── #}
+  <div class="card detail-card profile-card">
+    <div class="profile-card-header">
+      <div class="profile-avatar-lg">{{ user_obj.name[0] }}</div>
+      <div class="profile-card-meta">
+        <h2>{{ user_obj.name }}</h2>
+        <p>{{ user_obj.email }}</p>
+        <div class="profile-badges-row">
+          <span class="badge {% if user_obj.role == 'admin' %}badge-admin{% elif user_obj.role == 'organizer' %}badge-org{% else %}badge-student{% endif %}">{{ user_obj.role|title }}</span>
+          {% if user_obj.is_active %}<span class="badge badge-registered">Active</span>{% else %}<span class="badge badge-absent">Inactive</span>{% endif %}
+          {% if user_obj.participant_id %}<span class="badge" style="background:var(--bg-muted);color:var(--navy);border:1px solid var(--border);font-family:monospace;">{{ user_obj.participant_id }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ─── Contact Info ─── #}
+  <div class="card detail-card">
+    <div class="detail-card-header"><i class="fas fa-address-card"></i> Contact Info</div>
+    <div class="detail-card-body">
+      <table class="detail-table">
+        <tr><td>Email</td><td><a href="mailto:{{ user_obj.email }}">{{ user_obj.email }}</a></td></tr>
+        <tr><td>Phone</td><td>{{ user_obj.phone or '—' }}</td></tr>
+        <tr><td>College</td><td>{{ user_obj.college or '—' }}</td></tr>
+        <tr><td>Department</td><td>{{ user_obj.department or '—' }}</td></tr>
+        <tr><td>Year of Study</td><td>{% if user_obj.year_of_study %}{{ user_obj.year_of_study }}<sup>{% if user_obj.year_of_study == 1 %}st{% elif user_obj.year_of_study == 2 %}nd{% elif user_obj.year_of_study == 3 %}rd{% else %}th{% endif %}</sup> Year{% else %}—{% endif %}</td></tr>
+        <tr><td>Reg. Number</td><td>{{ user_obj.reg_number or '—' }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  {# ─── Social Links ─── #}
+  <div class="card detail-card">
+    <div class="detail-card-header"><i class="fas fa-link"></i> Social Links</div>
+    <div class="detail-card-body">
+      <table class="detail-table">
+        <tr><td><i class="fab fa-github"></i> GitHub</td><td>{% if user_obj.github_url %}<a href="{{ user_obj.github_url }}" target="_blank" rel="noopener">{{ user_obj.github_url }}</a>{% else %}—{% endif %}</td></tr>
+        <tr><td><i class="fab fa-linkedin"></i> LinkedIn</td><td>{% if user_obj.linkedin_url %}<a href="{{ user_obj.linkedin_url }}" target="_blank" rel="noopener">{{ user_obj.linkedin_url }}</a>{% else %}—{% endif %}</td></tr>
+        <tr><td><i class="fas fa-camera"></i> Profile Photo</td><td>{% if user_obj.profile_photo_url %}<a href="{{ user_obj.profile_photo_url }}" target="_blank" rel="noopener">View Photo</a>{% else %}—{% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ─── Account Activity ─── #}
+<div class="card" style="margin-top:20px;">
+  <div class="detail-card-header"><i class="fas fa-history"></i> Account Activity</div>
+  <div class="detail-card-body">
+    <table class="detail-table">
+      <tr><td>Account Created</td><td>{{ user_obj.created_at.strftime('%d %B %Y at %I:%M %p') }}</td></tr>
+      <tr><td>Last Login</td><td>{% if user_obj.last_login %}{{ user_obj.last_login.strftime('%d %B %Y at %I:%M %p') }}{% else %}<span class="badge badge-absent">Never</span>{% endif %}</td></tr>
+      <tr><td>Last IP</td><td><code style="font-size:0.82rem;">{{ user_obj.last_login_ip or '—' }}</code></td></tr>
+    </table>
+
+    {% if audit_logs %}
+    <h4 style="margin:20px 0 12px;font-size:0.95rem;color:var(--navy);">Modification History</h4>
+    <div class="table-wrap">
+      <table class="data-table" id="history-table">
+        <thead><tr><th>Action</th><th>Admin</th><th>Details</th><th>IP</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for log in audit_logs %}
+          <tr class="{% if loop.index > 4 %}history-row-hidden{% endif %}">
+            <td>
+              {% if log.action == 'created' %}
+                <span class="badge badge-registered" title="Created"><i class="fas fa-plus-circle"></i> Created</span>
+              {% elif log.action == 'updated' %}
+                <span class="badge" style="background:#e0f2fe;color:#0369a1;" title="Updated"><i class="fas fa-pen"></i> Updated</span>
+              {% elif log.action == 'deleted' %}
+                <span class="badge badge-absent" title="Deleted"><i class="fas fa-trash"></i> Deleted</span>
+              {% elif log.action == 'status_toggled' %}
+                <span class="badge badge-org" title="Status Changed"><i class="fas fa-toggle-on"></i> Status</span>
+              {% elif log.action == 'activated' %}
+                <span class="badge badge-registered" title="Activated"><i class="fas fa-check-circle"></i> Activated</span>
+              {% elif log.action == 'deactivated' %}
+                <span class="badge badge-absent" title="Deactivated"><i class="fas fa-pause-circle"></i> Deactivated</span>
+              {% elif log.action == 'force_password_reset' %}
+                <span class="badge" style="background:#fef3c7;color:#92400e;" title="Force Reset"><i class="fas fa-lock"></i> Force Reset</span>
+              {% else %}
+                <span class="badge badge-org">{{ log.action|title }}</span>
+              {% endif %}
+            </td>
+            <td>{{ log.changed_by_user.name if log.changed_by_user else 'System' }}</td>
+            <td class="text-muted" style="max-width:360px;">
+              {% if log.old_value and log.new_value and ',' in log.old_value and ',' in log.new_value %}
+                {% set old_parts = log.old_value.split(',') %}
+                {% set new_parts = log.new_value.split(',') %}
+                {% set field_labels = ['role', 'active', 'name', 'email', 'college', 'dept', 'phone', 'year'] %}
+                <div style="font-size:0.8rem;">
+                {% for i in range(old_parts|length) if i < field_labels|length %}
+                  {% if old_parts[i] != new_parts[i] %}
+                    <div><strong>{{ field_labels[i] }}:</strong> {{ old_parts[i] or '—' }} <i class="fas fa-arrow-right" style="font-size:0.65rem;color:var(--text-muted);margin:0 4px;"></i> {{ new_parts[i] or '—' }}</div>
+                  {% endif %}
+                {% endfor %}
+                </div>
+              {% elif log.old_value and log.new_value and log.old_value != log.new_value %}
+                {{ log.old_value or '—' }} <i class="fas fa-arrow-right" style="font-size:0.65rem;color:var(--text-muted);margin:0 4px;"></i> {{ log.new_value or '—' }}
+              {% else %}
+                {{ log.changes or '—' }}
+              {% endif %}
+            </td>
+            <td><code style="font-size:0.72rem;">{{ log.ip_address or '—' }}</code></td>
+            <td class="text-muted" style="white-space:nowrap;">{{ log.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if audit_logs|length > 4 %}
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn btn-outline btn-sm" onclick="toggleHistory()" id="history-toggle-btn"><i class="fas fa-chevron-down"></i> View More ({{ audit_logs|length - 4 }} more)</button>
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-muted" style="margin-top:12px;">No modification history recorded.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div id="notify-overlay" class="notify-overlay" onclick="if(event.target===this)closeNotifyModal()">
+  <div class="notify-panel">
+    <div class="notify-panel-header">
+      <div class="notify-panel-title">
+        <div class="notify-avatar">{{ user_obj.name[0] }}</div>
+        <div>
+          <h3>Send Email</h3>
+          <p>To: {{ user_obj.email }}</p>
+        </div>
+      </div>
+      <button class="notify-close" onclick="closeNotifyModal()">&times;</button>
+    </div>
+    <div class="notify-panel-body">
+      <div class="notify-field">
+        <label>Subject</label>
+        <input type="text" id="notify-subject" placeholder="Enter email subject..."/>
+      </div>
+      <div class="notify-field">
+        <label>Message</label>
+        <textarea id="notify-message" rows="6" placeholder="Write your message here..."></textarea>
+      </div>
+      <div id="notify-result"></div>
+    </div>
+    <div class="notify-panel-footer">
+      <button class="btn btn-ghost" onclick="closeNotifyModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="sendNotify()"><i class="fas fa-paper-plane"></i> Send Email</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .detail-grid { grid-template-columns: 1fr; }
+}
+.detail-card { }
+.detail-card-header {
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--navy);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.detail-card-body {
+  padding: 16px 20px;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  vertical-align: top;
+}
+.detail-table td:first-child {
+  width: 140px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.detail-table tr:last-child td {
+  border-bottom: none;
+}
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+}
+.profile-avatar-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.profile-card-meta h2 {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--navy);
+}
+.profile-card-meta p {
+  margin: 2px 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.profile-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.history-row-hidden { display: none; }
+
+.notify-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.notify-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.notify-panel {
+  background: #fff;
+  border-radius: 12px;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.25s ease;
+}
+.notify-overlay.open .notify-panel {
+  transform: translateY(0) scale(1);
+}
+.notify-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.notify-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.notify-panel-title h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #1a3a6b;
+}
+.notify-panel-title p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.notify-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6b, #2451a0);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.notify-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.notify-close:hover {
+  background: #f1f5f9;
+  color: #333;
+}
+.notify-panel-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.notify-field {
+  margin-bottom: 16px;
+}
+.notify-field label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1a3a6b;
+  margin-bottom: 6px;
+}
+.notify-field input,
+.notify-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #1e293b;
+  background: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+.notify-field input:focus,
+.notify-field textarea:focus {
+  border-color: #1a3a6b;
+  box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+}
+.notify-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.notify-result-msg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.notify-result-msg.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+.notify-result-msg.error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.notify-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+}
+</style>
+
+<script>
+function openNotifyModal() {
+  document.getElementById('notify-subject').value = '';
+  document.getElementById('notify-message').value = '';
+  document.getElementById('notify-result').className = '';
+  document.getElementById('notify-result').textContent = '';
+  document.getElementById('notify-overlay').classList.add('open');
+}
+
+function closeNotifyModal() {
+  document.getElementById('notify-overlay').classList.remove('open');
+}
+
+async function sendNotify() {
+  const subject = document.getElementById('notify-subject').value.trim();
+  const message = document.getElementById('notify-message').value.trim();
+  if (!subject || !message) {
+    showNotifyResult('Please enter both subject and message.', false);
+    return;
+  }
+  const btn = document.querySelector('.notify-panel-footer .btn-primary');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+  try {
+    const resp = await fetch('{{ url_for("admin_notify_user", uid=user_obj.id) }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, message })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showNotifyResult('Email sent to ' + data.email + '.', true);
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email';
+      document.querySelector('.notify-panel-footer .btn-ghost').textContent = 'Close';
+      setTimeout(() => closeNotifyModal(), 2000);
+    } else {
+      showNotifyResult(data.error || 'Failed to send email.', false);
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email';
+    }
+  } catch (e) {
+    showNotifyResult('Request failed.', false);
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email';
+  }
+}
+
+function showNotifyResult(text, success) {
+  const el = document.getElementById('notify-result');
+  el.textContent = text;
+  el.className = 'notify-result-msg ' + (success ? 'success' : 'error');
+}
+
+function toggleHistory() {
+  const rows = document.querySelectorAll('.history-row-hidden');
+  const btn = document.getElementById('history-toggle-btn');
+  const isHidden = rows[0] && rows[0].style.display !== 'table-row';
+  rows.forEach(r => r.style.display = isHidden ? 'table-row' : 'none');
+  btn.innerHTML = isHidden
+    ? '<i class="fas fa-chevron-up"></i> Show Less'
+    : '<i class="fas fa-chevron-down"></i> View More ({{ audit_logs|length - 4 }} more)';
+}
+</script>
+{% endblock %}

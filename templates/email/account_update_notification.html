@@ -1,0 +1,24 @@
+{% extends "email/base_email.html" %}
+{% block content %}
+<div style="text-align:center;margin-bottom:20px;">
+  <span style="font-size:2.4rem;">🔔</span>
+  <h2 style="margin:12px 0 0;font-size:1.3rem;color:#1a2744;">Account Updated</h2>
+</div>
+<p style="margin:0 0 6px;color:#475569;font-size:0.95rem;line-height:1.5;">Hi <strong>{{ user.name }}</strong>,</p>
+<p style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">Your CampusCore account has been updated by an administrator.</p>
+
+{% if changes %}
+<div style="background:#f8fafc;border-radius:6px;padding:18px 20px;margin-bottom:24px;">
+  <p style="margin:0 0 10px;color:#64748b;font-size:0.85rem;font-weight:600;text-transform:uppercase;">Changes made</p>
+  {% for change in changes %}
+  <p style="margin:0 0 6px;color:#475569;font-size:0.9rem;padding:6px 0;border-bottom:1px solid #e2e8f0;">• {{ change }}</p>
+  {% endfor %}
+</div>
+{% else %}
+<p style="margin:0 0 24px;color:#94a3b8;font-size:0.9rem;">Your profile information has been updated.</p>
+{% endif %}
+
+<div style="background:#f8fafc;border-radius:6px;padding:14px 18px;">
+  <p style="margin:0;color:#64748b;font-size:0.85rem;">If you have any questions about these changes, please contact your administrator.</p>
+</div>
+{% endblock %}
