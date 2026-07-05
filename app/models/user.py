@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from app.extensions import db
+from app.models.mixins import SoftDeleteMixin
 
 
-class User(db.Model):
+class User(db.Model, SoftDeleteMixin):
     __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -31,9 +32,10 @@ class User(db.Model):
     last_login = db.Column(db.DateTime)
     last_login_ip = db.Column(db.String(45))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    calendar_feed_token = db.Column(db.String(64), nullable=True)
 
     registrations = db.relationship('Registration', backref='user', lazy=True)
-    attendances = db.relationship('Attendance', backref='user', lazy=True)
+    attendances = db.relationship('Attendance', backref='user', lazy=True, foreign_keys='Attendance.user_id')
     notifications = db.relationship('Notification', backref='user', lazy=True)
 
     def get_unread_notifications(self):

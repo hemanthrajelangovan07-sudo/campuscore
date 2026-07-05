@@ -91,6 +91,76 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-bell"></i>
+                <div>
+                  <strong>Event Reminders</strong>
+                  <span>Notify me before events start</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="event_reminders" value="0"/>
+                <input type="checkbox" name="event_reminders" value="1" {% if prefs.event_reminders %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Registration Confirmations</strong>
+                  <span>Get notified when you register for an event</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="registration_confirmations" value="0"/>
+                <input type="checkbox" name="registration_confirmations" value="1" {% if prefs.registration_confirmations %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-clock"></i>
+                <div>
+                  <strong>Waitlist Updates</strong>
+                  <span>Receive updates when you move up the waitlist</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="waitlist_updates" value="0"/>
+                <input type="checkbox" name="waitlist_updates" value="1" {% if prefs.waitlist_updates %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-certificate"></i>
+                <div>
+                  <strong>Certificate Ready</strong>
+                  <span>Get notified when certificates are available</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="certificate_ready" value="0"/>
+                <input type="checkbox" name="certificate_ready" value="1" {% if prefs.certificate_ready %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-megaphone"></i>
+                <div>
+                  <strong>New Events</strong>
+                  <span>Get notified about new events on campus</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="marketing_new_events" value="0"/>
+                <input type="checkbox" name="marketing_new_events" value="1" {% if prefs.marketing_new_events %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -133,7 +203,7 @@
 
 /* Profile Summary Card */
 .settings-profile-card {
-  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
   border: none;
   margin-bottom: 0;
   border-radius: var(--radius) var(--radius) 0 0;
@@ -146,8 +216,8 @@
 }
 .settings-avatar {
   width: 76px; height: 76px; border-radius: 50%;
-  background: var(--gold);
-  color: var(--navy-dark);
+  background: var(--maroon);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 2rem; font-weight: 700;
   flex-shrink: 0;
@@ -200,9 +270,9 @@
 .settings-tab i { font-size: 1.05rem; }
 .settings-tab:hover { color: var(--text); background: var(--off-white); }
 .settings-tab.active {
-  color: var(--navy);
+  color: var(--maroon);
   background: var(--off-white);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--maroon);
   font-weight: 600;
 }
 .settings-tab:not(:last-child)::after {
@@ -220,11 +290,11 @@
 .settings-panel-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--maroon);
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 8px;
 }
-.settings-panel-title i { color: var(--gold); font-size: 1.1rem; }
+.settings-panel-title i { color: var(--maroon); font-size: 1.1rem; }
 .settings-panel-desc {
   font-size: 0.92rem;
   color: var(--text-muted);
@@ -262,7 +332,7 @@
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px;
   background: white;
-  color: var(--navy-light);
+  color: var(--maroon-light);
   font-size: 1rem;
   border: 1px solid var(--border);
 }
@@ -306,7 +376,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 .toggle-switch input:checked + .toggle-slider {
-  background: var(--navy-light);
+  background: var(--maroon-light);
 }
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(24px);

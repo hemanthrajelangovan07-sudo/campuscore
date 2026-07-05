@@ -25,7 +25,7 @@
         {% for reg, stu in registrations %}
         <tr>
           <td class="text-muted">{{ loop.index }}</td>
-          <td><code style="font-size:0.8rem;color:var(--navy);">{{ stu.participant_id or '—' }}</code></td>
+          <td><code style="font-size:0.8rem;color:var(--maroon);">{{ stu.participant_id or '—' }}</code></td>
           <td><div class="cell-user"><span class="mini-avatar">{{ stu.name[0] }}</span><strong>{{ stu.name }}</strong></div></td>
           <td>{{ stu.email }}</td>
           <td>{{ stu.college or '—' }}</td>

@@ -14,7 +14,7 @@
 <div class="card form-card">
   <form method="POST" class="event-form" id="eventForm" enctype="multipart/form-data" onsubmit="return validateEventForm()" data-skip-validation="0">
     <div class="form-section">
-      <h4 class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</h4>
+      <h4 class="form-section-title">Basic Information</h4>
       <div class="form-group" style="margin-bottom: 16px;">
         <label><i class="far fa-heading" style="width:16px;color:var(--primary);"></i> Event Title *</label>
         <input type="text" name="title" id="ev_title" value="{{ event.title if event else '' }}" placeholder="Tech Conference 2023" required/>
@@ -28,7 +28,7 @@
     </div>
 
     <div class="form-section">
-      <h4 class="form-section-title"><i class="fas fa-clock"></i> Schedule & Location</h4>
+      <h4 class="form-section-title">Schedule & Location</h4>
       <div class="form-row">
         <div class="form-group">
           <label><i class="far fa-calendar" style="width:16px;color:var(--primary);"></i> Date *</label>
@@ -69,7 +69,7 @@
     </div>
 
     <div class="form-section">
-      <h4 class="form-section-title"><i class="fas fa-tags"></i> Tags & Media</h4>
+      <h4 class="form-section-title">Tags & Media</h4>
       <div class="form-group" style="margin-bottom: 16px;">
         <label><i class="fas fa-tag" style="width:16px;color:var(--primary);"></i> Tags</label>
         <div style="display: flex; gap: 8px;">
@@ -127,7 +127,7 @@
     </div>
 
     <div class="form-section" id="signatorySection">
-      <h4 class="form-section-title"><i class="fas fa-signature"></i> Certificate Signatories</h4>
+      <h4 class="form-section-title">Certificate Signatories</h4>
       {% if event and event.id %}
       <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 12px;">
         Add signatories whose names and signatures will appear on certificates generated for this event.

@@ -15,7 +15,7 @@
   <div class="table-wrap">
     <table class="data-table">
       <thead>
-        <tr><th>Event</th><th>Date</th><th>Venue</th><th>Category</th><th>Material</th><th>Attendance</th><th>Certificate</th></tr>
+        <tr><th>Event</th><th>Date</th><th>Venue</th><th>Category</th><th>Material</th><th>Attendance</th><th>Certificate</th><th>Calendar</th><th>Check-in QR</th></tr>
       </thead>
       <tbody>
         {% for reg, event in registrations %}
@@ -59,6 +59,24 @@
               <span class="text-muted" style="font-size:0.8rem;">Pending</span>
             {% endif %}
           </td>
+          <td>
+            {% if reg.status == 'confirmed' %}
+            <a href="{{ url_for('export_event_ics', event_id=event.id) }}" class="btn btn-sm btn-outline" title="Add to Calendar">
+              <i class="fas fa-calendar-plus"></i>
+            </a>
+            {% else %}
+            <span class="text-muted" style="font-size:0.78rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if reg.status == 'confirmed' and event.date >= today %}
+            <button class="btn btn-sm btn-outline" onclick="showQR('{{ reg.id }}', '{{ event.id }}')">
+              <i class="fas fa-qrcode"></i> Show
+            </button>
+            {% else %}
+            <span class="text-muted" style="font-size:0.78rem;">—</span>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -83,6 +101,43 @@
 
 {% block scripts %}
 {{ super() }}
+<style>
+.qr-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.qr-modal-content {
+  background: var(--white); border-radius: var(--radius);
+  padding: 32px; text-align: center; max-width: 320px; width: 90%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+.qr-modal-content h3 { margin-bottom: 16px; color: var(--text); }
+.qr-modal-content img { width: 200px; height: 200px; display: block; margin: 0 auto 16px; }
+.qr-modal-content p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+.qr-modal-content .btn { width: 100%; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+<script>
+function showQR(regId, eventId) {
+  var existing = document.querySelector('.qr-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.className = 'qr-modal';
+  modal.innerHTML = '<div class="qr-modal-content">' +
+    '<h3><i class="fas fa-qrcode"></i> Check-in QR</h3>' +
+    '<img src="/student/events/' + eventId + '/qr?' + Date.now() + '" alt="QR Code"/>' +
+    '<p>Show this QR at the event check-in desk.</p>' +
+    '<button class="btn btn-primary btn-sm" onclick="this.closest(\'.qr-modal\').remove()">Close</button>' +
+    '</div>';
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.remove();
+  });
+  document.body.appendChild(modal);
+}
+</script>
 <script>
 (function() {
   var socket = window._socket;

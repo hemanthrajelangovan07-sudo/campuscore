@@ -182,7 +182,7 @@
   transition: border-color 0.2s, background 0.2s;
 }
 .table-search-wrap input:focus {
-  border-color: var(--navy-light);
+  border-color: var(--maroon-light);
   background: var(--off-white);
 }
 
@@ -278,7 +278,7 @@
   outline: none;
 }
 .chart-controls select:focus {
-  border-color: var(--navy-light);
+  border-color: var(--maroon-light);
 }
 .chart-summary {
   font-size: 0.82rem;
@@ -304,10 +304,10 @@
 /* ── Dark Mode ── */
 [data-theme="dark"] .page-heading { color: var(--text); }
 [data-theme="dark"] .card-header h3 { color: var(--text); }
-[data-theme="dark"] .stat-blue { background: linear-gradient(135deg, #1a3a6b, #2d5aa0); }
-[data-theme="dark"] .stat-gold { background: linear-gradient(135deg, #8a7030, var(--gold)); }
-[data-theme="dark"] .stat-teal { background: linear-gradient(135deg, #0f766e, #2dd4bf); }
-[data-theme="dark"] .stat-green { background: linear-gradient(135deg, #166534, #4ade80); }
+[data-theme="dark"] .stat-blue { background: linear-gradient(135deg, var(--maroon-dark), var(--maroon)); }
+[data-theme="dark"] .stat-gold { background: linear-gradient(135deg, var(--maroon-dark), var(--maroon-light)); }
+[data-theme="dark"] .stat-teal { background: linear-gradient(135deg, var(--maroon), var(--gold)); }
+[data-theme="dark"] .stat-green { background: linear-gradient(135deg, var(--gold), var(--maroon-light)); }
 [data-theme="dark"] .card-chart-body { background: var(--off-white); }
 [data-theme="dark"] .chart-controls select {
   background-color: var(--white);
@@ -334,8 +334,8 @@
   'use strict';
 
   var rootStyle = getComputedStyle(document.documentElement);
-  var navy   = rootStyle.getPropertyValue('--navy').trim() || '#1a3a6b';
-  var gold   = rootStyle.getPropertyValue('--gold').trim() || '#C9A84C';
+  var maroon = rootStyle.getPropertyValue('--maroon').trim() || '#831238';
+  var gold   = rootStyle.getPropertyValue('--gold').trim() || '#ffffff';
   var teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
   var green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
   var red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
@@ -343,7 +343,7 @@
   var border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
   var whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
 
-  var palette = [navy, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+  var palette = [maroon, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
 
   Chart.defaults.color = textMuted;
   Chart.defaults.borderColor = border;
@@ -482,15 +482,15 @@
   // ── Theme switch ─────────────────────────────────────────────────────
   function refreshColors() {
     rootStyle = getComputedStyle(document.documentElement);
-    navy   = rootStyle.getPropertyValue('--navy').trim() || '#1a3a6b';
-    gold   = rootStyle.getPropertyValue('--gold').trim() || '#C9A84C';
+    maroon = rootStyle.getPropertyValue('--maroon').trim() || '#831238';
+    gold   = rootStyle.getPropertyValue('--gold').trim() || '#ffffff';
     teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
     green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
     red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
     textMuted = rootStyle.getPropertyValue('--text-muted').trim() || '#7a8499';
     border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
     whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
-    palette = [navy, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+    palette = [maroon, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
     Chart.defaults.color = textMuted;
     Chart.defaults.borderColor = border;
     if (typeof catChart !== 'undefined') catChart.update();

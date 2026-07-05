@@ -7,10 +7,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header"><div><h1 class="page-heading">{{ event.title }} — Statistics</h1></div><a href="{{ url_for('admin_events') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a></div>
+<div class="page-header">
+  <div><h1 class="page-heading">{{ event.title }} — Statistics</h1></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{{ url_for('organizer_export_event_stats', event_id=event.id) }}" class="btn btn-sm btn-outline" style="color:var(--brass);border-color:var(--brass);"><i class="fas fa-download"></i> Export CSV</a>
+    <a href="{{ url_for('organizer_events') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</div>
 
 <div class="stats-grid" style="margin-bottom:20px;">
-  <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><span class="stat-value" id="statReg">{{ reg_count }}</span><span class="stat-label">Registrations</span></div><div class="stat-wave"></div></div>
+  <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><span class="stat-value" id="statReg">{{ reg_count }}</span><span class="stat-label">Confirmed</span></div><div class="stat-wave"></div></div>
   <div class="stat-card stat-teal"><div class="stat-icon"><i class="fas fa-ticket-alt"></i></div><div class="stat-info"><span class="stat-value">{{ event.max_participants }}</span><span class="stat-label">Capacity</span></div><div class="stat-wave"></div></div>
   <div class="stat-card stat-green"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="stat-info"><span class="stat-value" id="statPresent">{{ present_count }}</span><span class="stat-label">Present</span></div><div class="stat-wave"></div></div>
 </div>
@@ -42,9 +48,9 @@
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
       <span style="width:160px;font-size:0.85rem;font-weight:500;">{{ college or 'N/A' }}</span>
       <div style="flex:1;height:24px;background:var(--border);border-radius:12px;overflow:hidden;">
-        <div style="height:100%;background:linear-gradient(90deg,var(--navy),var(--navy-light));border-radius:12px;width:{{ ((count / reg_count) * 100)|int if reg_count > 0 else 0 }}%;"></div>
+        <div style="height:100%;background:linear-gradient(90deg,var(--maroon),var(--maroon-light));border-radius:12px;width:{{ ((count / reg_count) * 100)|int if reg_count > 0 else 0 }}%;"></div>
       </div>
-      <span style="font-size:0.85rem;font-weight:600;color:var(--navy);width:40px;text-align:right;">{{ count }}</span>
+      <span style="font-size:0.85rem;font-weight:600;color:var(--maroon);width:40px;text-align:right;">{{ count }}</span>
     </div>
     {% endfor %}
     {% else %}
@@ -52,6 +58,60 @@
     {% endif %}
   </div>
 </div>
+{% if feedback_stats %}
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-star"></i> Feedback Summary</h3></div>
+  <div style="padding:20px;">
+    <div style="display:flex;gap:24px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="text-align:center;min-width:100px;">
+        <div style="font-size:2rem;font-weight:700;color:var(--maroon);">{{ feedback_stats.average }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">avg rating</div>
+        <div style="color:var(--gold);font-size:0.9rem;">
+          {% for i in range(5) %}
+            {% if i < feedback_stats.average|int %}
+              <i class="fas fa-star"></i>
+            {% elif i < feedback_stats.average %}
+              <i class="fas fa-star-half-alt"></i>
+            {% else %}
+              <i class="far fa-star"></i>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        {% for i in range(5,0,-1) %}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:0.8rem;width:30px;">{{ i }}<i class="fas fa-star" style="color:var(--gold);font-size:0.65rem;margin-left:2px;"></i></span>
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+            {% set pct = (feedback_stats.distribution.get(i,0) / feedback_stats.total * 100)|int %}
+            <div style="height:100%;width:{{ pct }}%;background:var(--gold);border-radius:4px;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted);width:24px;text-align:right;">{{ feedback_stats.distribution.get(i,0) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="text-align:center;min-width:80px;">
+        <div style="font-size:1.5rem;font-weight:600;">{{ feedback_stats.total }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">reviews</div>
+      </div>
+    </div>
+    {% if feedbacks|selectattr('comment')|list %}
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+    <h4 style="font-size:0.9rem;margin-bottom:12px;">Recent Comments</h4>
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;">
+      {% for fb in feedbacks[:10] if fb.comment %}
+      <div style="padding:10px 14px;background:var(--bg-alt);border-radius:8px;font-size:0.85rem;">
+        <div style="color:var(--gold);font-size:0.75rem;margin-bottom:2px;">
+          {% for i in range(fb.rating) %}<i class="fas fa-star"></i>{% endfor %}
+        </div>
+        <p style="margin:0;">{{ fb.comment }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -60,8 +120,8 @@ const eventId = {{ event.id }};
 fetch(`/api/events/${eventId}/charts`)
   .then(r => r.json())
   .then(d => {
-    const navy = '#1a3a6b';
-    const gold = '#C9A84C';
+    const maroon = '#831238';
+    const pink = '#e8a0b4';
     const teal = '#0d9488';
     const green = '#16a34a';
     const red = '#dc2626';
@@ -87,14 +147,14 @@ fetch(`/api/events/${eventId}/charts`)
         type: 'polarArea',
         data: {
           labels: d.college_data.map(c => c.label),
-          datasets: [{ data: d.college_data.map(c => c.count), backgroundColor: [navy, gold, teal, green, '#2451a0', '#e8c96a', '#0f766e', '#15803d'], borderWidth: 0 }]
+          datasets: [{ data: d.college_data.map(c => c.count), backgroundColor: [maroon, pink, teal, green, '#9e1645', '#f5c6d4', '#0f766e', '#15803d'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
       });
     }
 
     if (d.dept_data.length) {
-      const deptColors = ['#1a3a6b','#C9A84C','#0d9488','#16a34a','#dc2626','#2451a0','#e8c96a','#0f766e','#15803d','#b91c1c'];
+      const deptColors = ['#831238','#e8a0b4','#0d9488','#16a34a','#dc2626','#9e1645','#f5c6d4','#0f766e','#15803d','#b91c1c'];
       new Chart(document.getElementById('deptChart'), {
         type: 'bar',
         data: {
@@ -110,7 +170,7 @@ fetch(`/api/events/${eventId}/charts`)
         type: 'line',
         data: {
           labels: d.registration_trend.map(x => x.day.slice(5)),
-          datasets: [{ label: 'Registrations', data: d.registration_trend.map(x => x.count), borderColor: navy, backgroundColor: gold, fill: true, tension: 0.3, pointBackgroundColor: navy }]
+          datasets: [{ label: 'Registrations', data: d.registration_trend.map(x => x.count), borderColor: maroon, backgroundColor: pink, fill: true, tension: 0.3, pointBackgroundColor: maroon }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
       });

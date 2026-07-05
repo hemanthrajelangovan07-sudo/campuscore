@@ -6,7 +6,7 @@
 <div class="page-header">
   <div><h1 class="page-heading">{{ user_obj.name }}</h1></div>
   <div class="action-btns">
-    <button class="btn btn-outline" onclick="openNotifyModal()" style="border-color:var(--navy);color:var(--navy);"><i class="fas fa-envelope"></i> Send Email</button>
+    <button class="btn btn-outline" onclick="openNotifyModal()" style="border-color:var(--maroon);color:var(--maroon);"><i class="fas fa-envelope"></i> Send Email</button>
     <a href="{{ url_for('admin_edit_user', uid=user_obj.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
     <a href="{{ url_for('admin_users') }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back to Users</a>
   </div>
@@ -23,7 +23,7 @@
         <div class="profile-badges-row">
           <span class="badge {% if user_obj.role == 'admin' %}badge-admin{% elif user_obj.role == 'organizer' %}badge-org{% else %}badge-student{% endif %}">{{ user_obj.role|title }}</span>
           {% if user_obj.is_active %}<span class="badge badge-registered">Active</span>{% else %}<span class="badge badge-absent">Inactive</span>{% endif %}
-          {% if user_obj.participant_id %}<span class="badge" style="background:var(--bg-muted);color:var(--navy);border:1px solid var(--border);font-family:monospace;">{{ user_obj.participant_id }}</span>{% endif %}
+          {% if user_obj.participant_id %}<span class="badge" style="background:var(--bg-muted);color:var(--maroon);border:1px solid var(--border);font-family:monospace;">{{ user_obj.participant_id }}</span>{% endif %}
         </div>
       </div>
     </div>
@@ -68,7 +68,7 @@
     </table>
 
     {% if audit_logs %}
-    <h4 style="margin:20px 0 12px;font-size:0.95rem;color:var(--navy);">Modification History</h4>
+    <h4 style="margin:20px 0 12px;font-size:0.95rem;color:var(--maroon);">Modification History</h4>
     <div class="table-wrap">
       <table class="data-table" id="history-table">
         <thead><tr><th>Action</th><th>Admin</th><th>Details</th><th>IP</th><th>Date</th></tr></thead>
@@ -175,7 +175,7 @@
   padding: 16px 20px;
   font-weight: 600;
   font-size: 0.95rem;
-  color: var(--navy);
+  color: var(--maroon);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -212,7 +212,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
   color: white;
   display: flex;
   align-items: center;
@@ -225,7 +225,7 @@
   margin: 0;
   font-family: 'Playfair Display', serif;
   font-size: 1.3rem;
-  color: var(--navy);
+  color: var(--maroon);
 }
 .profile-card-meta p {
   margin: 2px 0 8px;
@@ -286,7 +286,7 @@
 .notify-panel-title h3 {
   margin: 0;
   font-size: 1.05rem;
-  color: #1a3a6b;
+  color: #831238;
 }
 .notify-panel-title p {
   margin: 2px 0 0;
@@ -297,7 +297,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a3a6b, #2451a0);
+  background: linear-gradient(135deg, #831238, #9e1645);
   color: #fff;
   display: flex;
   align-items: center;
@@ -332,7 +332,7 @@
   display: block;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #1a3a6b;
+  color: #831238;
   margin-bottom: 6px;
 }
 .notify-field input,
@@ -351,8 +351,8 @@
 }
 .notify-field input:focus,
 .notify-field textarea:focus {
-  border-color: #1a3a6b;
-  box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+  border-color: #831238;
+  box-shadow: 0 0 0 3px rgba(131,18,56,0.12);
 }
 .notify-field textarea {
   resize: vertical;

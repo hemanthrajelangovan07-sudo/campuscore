@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate Verified</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 24px; }
+    .verify-card { max-width: 480px; width: 100%; background: var(--white); border-radius: var(--radius); padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+    .icon-verified { width: 72px; height: 72px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; color: #16a34a; }
+    h1 { color: #16a34a; font-size: 1.5rem; margin-bottom: 8px; }
+    .cert-name { font-size: 1.25rem; font-weight: 700; color: var(--maroon); margin: 16px 0 4px; }
+    .cert-event { font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+    .cert-date { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
+    .meta { font-size: 0.78rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+    .badge-verified { display: inline-block; padding: 4px 16px; border-radius: 20px; background: #dcfce7; color: #16a34a; font-size: 0.78rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="verify-card">
+    <div class="icon-verified"><i class="fas fa-check-circle"></i></div>
+    <h1>Certificate Verified</h1>
+    <p style="color:var(--text-muted);margin-bottom:16px;">This certificate was issued by Sathyabama Institute of Science and Technology</p>
+    <div class="badge-verified"><i class="fas fa-shield-alt"></i> Genuine Certificate</div>
+    <div class="cert-name">{{ name }}</div>
+    <div class="cert-event">{{ event }}</div>
+    <div class="cert-date">{{ date }}</div>
+    <div class="meta">Issued on {{ issued_at }} · Verification ID: {{ verification_code if verification_code else '' }}</div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+</body>
+</html>

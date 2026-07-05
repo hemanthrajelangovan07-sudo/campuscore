@@ -4,9 +4,25 @@
 
 {% block head %}
 <style>
-  /* ── Dark Mode ── */
   [data-theme="dark"] .tab-bar { background: var(--white) !important; }
+  .badge-pending { background: #fef3c7; color: #92400e; }
+  .badge-approved { background: #dcfce7; color: #166534; }
+  .badge-rejected { background: #fef2f2; color: #991b1b; }
 </style>
+<script>
+function confirmReject(form) {
+  var r = prompt('Rejection reason:');
+  if (r) {
+    var i = document.createElement('input');
+    i.type = 'hidden';
+    i.name = 'reason';
+    i.value = r;
+    form.appendChild(i);
+    return true;
+  }
+  return false;
+}
+</script>
 {% endblock %}
 
 {% block content %}
@@ -19,9 +35,10 @@
 </div>
 
 <div class="tab-bar" style="display: flex; gap: 4px; margin-bottom: 20px; background: white; border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border);">
-  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">All Events</a>
-  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
-  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">Past</a>
+  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">All Events</a>
+  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
+  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">Past</a>
+  <a href="?tab=pending&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'pending' %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">Pending</a>
 </div>
 
 <!-- Filters -->
@@ -53,10 +70,25 @@
     <div class="event-card">
       <div class="event-card-header">
         <span class="badge badge-cat">{{ event.category }}</span>
-        {% if event.date < today %}
-          <span class="badge badge-past">Past</span>
-        {% elif event.date == today %}
-          <span class="badge badge-today">Active</span>
+        {% if event.approval_status == 'pending' %}
+          <span class="badge badge-pending">Pending</span>
+          {% if event.revision_count and event.revision_count > 0 %}
+          <span class="badge" style="background:#e0e7ff;color:#4338ca;border:1px solid #a5b4fc;">Rev {{ event.revision_count }}</span>
+          {% endif %}
+        {% elif event.approval_status == 'rejected' %}
+          <span class="badge badge-rejected">Rejected</span>
+        {% endif %}
+        {% if session.get('role') == 'admin' and event.approval_status == 'pending' %}
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <form method="POST" action="{{ url_for('admin_review_event', event_id=event.id) }}" style="display:inline;">
+            <input type="hidden" name="decision" value="approved">
+            <button type="submit" class="btn btn-sm" style="background:#16a34a;color:white;border:none;padding:4px 10px;border-radius:6px;font-size:0.72rem;"><i class="fas fa-check"></i> Approve</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_review_event', event_id=event.id) }}" style="display:inline;" onsubmit="return confirmReject(this);">
+            <input type="hidden" name="decision" value="rejected">
+            <button type="submit" class="btn btn-sm" style="background:#dc2626;color:white;border:none;padding:4px 10px;border-radius:6px;font-size:0.72rem;"><i class="fas fa-times"></i> Reject</button>
+          </form>
+        </div>
         {% endif %}
       </div>
       {% if event.image_url %}
@@ -82,6 +114,7 @@
         <div class="action-btns">
           {% if session.get('role') == 'admin' %}
           <a href="{{ url_for('manage_attendance', event_id=event.id) }}" class="btn btn-sm btn-outline">View</a>
+          <a href="{{ url_for('admin_analytics.analytics') }}" class="btn btn-sm btn-outline" style="color:var(--brass);border-color:var(--brass);"><i class="fas fa-chart-bar"></i></a>
           <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
           <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}"
                 onsubmit="return confirm('Delete this event and all its data?')">
@@ -91,6 +124,7 @@
           </form>
           {% else %}
           <a href="{{ url_for('organizer_manage_attendance', event_id=event.id) }}" class="btn btn-sm btn-outline">View</a>
+          <a href="{{ url_for('organizer_event_stats', event_id=event.id) }}" class="btn btn-sm btn-outline" style="color:var(--brass);border-color:var(--brass);"><i class="fas fa-chart-bar"></i></a>
           <a href="{{ url_for('organizer_edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
           <form method="POST" action="{{ url_for('organizer_delete_event', event_id=event.id) }}"
                 onsubmit="return confirm('Delete this event and all its data?')">

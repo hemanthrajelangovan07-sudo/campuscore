@@ -20,7 +20,7 @@
         {% for s in students %}
         <tr>
           <td class="text-muted">{{ loop.index }}</td>
-          <td><code style="font-size:0.8rem;color:var(--navy);">{{ s.participant_id or '—' }}</code></td>
+          <td><code style="font-size:0.8rem;color:var(--maroon);">{{ s.participant_id or '—' }}</code></td>
           <td><div class="cell-user"><span class="mini-avatar">{{ s.name[0] }}</span>{{ s.name }}</div></td>
           <td>{{ s.email }}</td>
           <td>{{ s.reg_number or '—' }}</td>

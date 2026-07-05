@@ -1,96 +1,349 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
-{% block body_class %}auth-body{% endblock %}
+{% block body_class %}erp-login-body{% endblock %}
 
 {% block auth_content %}
-<div class="auth-split">
-  <div class="auth-left">
-    <div class="auth-left-inner">
-      <img src="{{ url_for('static', filename='images/sist_logo.png') }}" alt="SIST Logo" class="auth-logo"/>
-      <h1 class="auth-university">Sathyabama Institute of Science and Technology</h1>
-      <p class="auth-tagline">Deemed to be University | Justice · Peace · Revolution</p>
-      <div class="auth-features">
-        <div class="auth-feat"><i class="fas fa-calendar-check"></i><span>Event Management</span></div>
-        <div class="auth-feat"><i class="fas fa-certificate"></i><span>Digital Certificates</span></div>
-        <div class="auth-feat"><i class="fas fa-user-check"></i><span>Attendance Tracking</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="auth-right">
-    <div class="auth-card">
-      <div class="auth-card-header">
-        <h2>Welcome Back</h2>
-        <p>Sign in to CampusCore Portal</p>
-      </div>
-
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}{% for cat, msg in messages %}
-          <div class="flash flash-{{ cat }}"><i class="fas fa-info-circle"></i> {{ msg }}</div>
-        {% endfor %}{% endif %}
-      {% endwith %}
-
-      <form method="POST" action="{{ url_for('login') }}" class="auth-form" id="loginForm">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <div class="input-wrap">
-            <i class="fas fa-envelope"></i>
-            <input type="email" id="email" name="email" placeholder="your@sist.ac.in" required autocomplete="email"/>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="input-wrap">
-            <i class="fas fa-lock"></i>
-            <input type="password" id="password" name="password" placeholder="••••••••" required/>
-            <button type="button" class="pw-toggle" onclick="togglePw('password')"><i class="fas fa-eye"></i></button>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full">
-          <i class="fas fa-sign-in-alt"></i> Sign In
-        </button>
-      </form>
-
-      <!-- Google OAuth Login -->
-      <div class="oauth-divider">
-        <span>or</span>
-      </div>
-
-      <a href="{{ url_for('google_login') }}" class="btn-google">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-             alt="Google logo" width="20" height="20">
-        Sign in with Google
+<div class="erp-login-wrapper">
+  <div class="erp-login-card">
+    <div class="erp-login-header">
+      <a href="/">
+        <img src="https://erp.sathyabama.ac.in/assets/images/sathyabama_header-logo-A++.jpg" alt="Sathyabama" class="erp-login-logo"/>
       </a>
+    </div>
 
-      <p class="auth-switch">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
 
-      <div class="demo-creds">
-        <p class="demo-title"><i class="fas fa-key"></i> Demo Credentials</p>
-        <div class="demo-grid">
-          <div class="demo-item" onclick="fillCreds('admin@sist.ac.in','admin123')">
-            <span class="badge badge-admin">Admin</span>
-            <code>admin@sist.ac.in</code>
-            <code>admin123</code>
-          </div>
-          <div class="demo-item" onclick="fillCreds('student@sist.ac.in','student123')">
-            <span class="badge badge-student">Student</span>
-            <code>student@sist.ac.in</code>
-            <code>student123</code>
-          </div>
-        </div>
+    <form method="POST" action="{{ url_for('login') }}" class="erp-login-form" id="loginForm">
+      <div class="erp-form-group">
+        <label for="role">Login Type</label>
+        <select id="role" name="role" class="erp-select">
+          <option value="student" selected>Student</option>
+          <option value="organizer">Organizer</option>
+          <option value="admin">Admin</option>
+        </select>
       </div>
+
+      <div class="erp-form-group">
+        <label for="email">Register Number / Email</label>
+        <input type="text" id="email" name="email" placeholder="Enter Register Number or Email" required autocomplete="username"/>
+      </div>
+
+      <div class="erp-form-group pwd">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter password" required/>
+        <i role="button" class="fas fa-eye pw-toggle-erp" onclick="togglePw('password')"></i>
+      </div>
+
+      <div class="erp-form-options">
+        <label class="erp-remember">
+          <input type="checkbox" checked/>
+          <span class="erp-check-rem"></span>
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="erp-forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="erp-btn-primary">Sign In</button>
+    </form>
+
+    <div class="erp-login-footer">
+      <span class="erp-footer-muted">Don't have an account?</span>
+      <a href="{{ url_for('register') }}">Create one</a>
     </div>
   </div>
+
+  <div class="erp-footer">&copy; 2026 Sathyabama Institute of Science and Technology</div>
 </div>
 
-<script>
-function fillCreds(email, pass) {
-  document.getElementById('email').value = email;
-  document.getElementById('password').value = pass;
+<style>
+.erp-login-body {
+  margin: 0;
+  min-height: 100vh;
+  background: url('https://erp.sathyabama.ac.in/assets/images/loginbg1.jpg') center center / cover no-repeat fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
+.erp-login-body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.erp-login-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.erp-login-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 44px 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  border: none;
+}
+
+.erp-login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.erp-login-logo {
+  max-width: 220px;
+  height: auto;
+  border-radius: 6px;
+}
+
+.erp-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.erp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.erp-form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.erp-form-group input,
+.erp-select {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 1.05rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.erp-form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+.erp-form-group input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.erp-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.erp-select:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.erp-select option {
+  color: #e2e8f0;
+  background: #1e293b;
+}
+
+.pwd {
+  position: relative;
+}
+
+.pw-toggle-erp {
+  position: absolute;
+  right: 15px;
+  top: 38px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1rem;
+  z-index: 1;
+  transition: color 0.2s;
+  padding: 4px;
+}
+
+.pw-toggle-erp:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.erp-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.erp-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.45);
+  position: relative;
+  user-select: none;
+}
+.erp-remember input { position: absolute; opacity: 0; height: 0; width: 0; }
+.erp-check-rem {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.erp-remember input:checked ~ .erp-check-rem {
+  background: #831238;
+  border-color: #831238;
+}
+.erp-remember input:checked ~ .erp-check-rem::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: white;
+}
+
+.erp-forgot-link {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.2s;
+  text-decoration: none;
+}
+.erp-forgot-link:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.erp-btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: #831238;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.erp-btn-primary:hover {
+  background: #9a1642;
+}
+
+.erp-btn-primary:active {
+  background: #6e0f2f;
+}
+
+.erp-login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.erp-footer-muted {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+}
+
+.erp-login-footer a {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.erp-login-footer a:hover {
+  color: #fff;
+}
+
+.erp-footer {
+  position: absolute;
+  bottom: 20px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.78rem;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0.05em;
+}
+
+.erp-login-body .flash {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .erp-login-card {
+    padding: 32px 24px 28px;
+    border-radius: 14px;
+  }
+  .erp-login-logo {
+    max-width: 180px;
+  }
+}
+</style>
+
+<script>
 function togglePw(id) {
   const el = document.getElementById(id);
-  el.type = el.type === 'password' ? 'text' : 'password';
+  const icon = el.parentElement.querySelector('.pw-toggle-erp');
+  if (el.type === 'password') {
+    el.type = 'text';
+    icon.className = 'fas fa-eye-slash pw-toggle-erp';
+  } else {
+    el.type = 'password';
+    icon.className = 'fas fa-eye pw-toggle-erp';
+  }
 }
 </script>
 {% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Audit Logs{% endblock %}
+{% block page_title %}<i class="fas fa-history"></i> Audit Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-heading">Audit Logs</h1>
+    <p class="page-sub">Track all system activity</p>
+  </div>
+</div>
+
+<div class="card">
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date/Time</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="white-space:nowrap;">{{ log.created_at.strftime('%d %b %Y %H:%M') }}</td>
+          <td>
+            {% if log.user %}
+              {{ log.user.name }}<br><span style="font-size:0.75rem;color:var(--text-muted);">{{ log.user.email }}</span>
+            {% else %}
+              <span style="color:var(--text-muted);">System</span>
+            {% endif %}
+          </td>
+          <td><code>{{ log.action }}</code></td>
+          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;">
+            {% if log.changes %}
+              <pre style="font-size:0.72rem;margin:0;max-height:60px;overflow-y:auto;">{{ log.changes | tojson(indent=1) if log.changes is mapping else log.changes }}</pre>
+            {% endif %}
+          </td>
+          <td style="font-size:0.8rem;">{{ log.ip_address or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty-state">No audit logs recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pagination.pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;padding:20px 0;">
+    {% if pagination.has_prev %}
+      <a href="?page={{ pagination.prev_num }}" class="btn btn-sm btn-outline">Previous</a>
+    {% endif %}
+    <span style="padding:6px 12px;font-size:0.85rem;color:var(--text-muted);">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+      <a href="?page={{ pagination.next_num }}" class="btn btn-sm btn-outline">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+.data-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+.data-table th { text-align:left; padding:12px 16px; background:var(--off-white); color:var(--text-muted); font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid var(--border); }
+.data-table td { padding:12px 16px; border-bottom:1px solid var(--border); vertical-align:top; }
+.data-table tr:hover td { background:var(--off-white); }
+.data-table code { background:var(--off-white); padding:2px 8px; border-radius:4px; font-size:0.78rem; }
+.data-table pre { background:var(--off-white); padding:6px 8px; border-radius:4px; font-size:0.72rem; }
+</style>
+{% endblock %}

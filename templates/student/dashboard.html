@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Student Dashboard{% endblock %}
-{% block page_title %}<i class="fas fa-th-large"></i> Dashboard{% endblock %}
+{% block page_title %}<i class="fas fa-compass"></i> Dashboard{% endblock %}
 
 {% block content %}
 <div class="page-header">
   <div>
-    <h1 class="page-heading">Hello, {{ user.name.split()[0] }} 👋</h1>
+    <h1 class="page-heading">Hello, {{ user.name.split()[0] }}</h1>
     <p class="page-sub">{{ user.department or 'Sathyabama Institute of Science and Technology' }}</p>
   </div>
 </div>

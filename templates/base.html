@@ -25,7 +25,7 @@
   <nav class="sidebar-nav">
     {% if session.get('role') == 'admin' %}
     <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
-      <i class="fas fa-th-large"></i><span>Dashboard</span>
+      <i class="fas fa-compass"></i><span>Dashboard</span>
     </a>
     <a href="{{ url_for('admin_users') }}" class="nav-item {% if request.endpoint in ('admin_users', 'admin_create_user', 'admin_edit_user') %}active{% endif %}">
       <i class="fas fa-users-gear"></i><span>Users</span>
@@ -40,12 +40,15 @@
     <a href="{{ url_for('admin_analytics.analytics') }}" class="nav-item {% if request.endpoint == 'admin_analytics.analytics' %}active{% endif %}">
       <i class="fas fa-chart-bar"></i><span>Analytics</span>
     </a>
+    <a href="{{ url_for('admin_audit_logs') }}" class="nav-item {% if request.endpoint == 'admin_audit_logs' %}active{% endif %}">
+      <i class="fas fa-history"></i><span>Audit Logs</span>
+    </a>
     <a href="{{ url_for('admin_user_settings') }}" class="nav-item {% if request.endpoint in ('admin_user_settings', 'admin_profile') %}active{% endif %}">
       <i class="fas fa-sliders-h"></i><span>My Settings</span>
     </a>
     {% elif session.get('role') == 'organizer' %}
     <a href="{{ url_for('organizer_dashboard') }}" class="nav-item {% if request.endpoint == 'organizer_dashboard' %}active{% endif %}">
-      <i class="fas fa-th-large"></i><span>Dashboard</span>
+      <i class="fas fa-compass"></i><span>Dashboard</span>
     </a>
     <a href="{{ url_for('organizer_events') }}" class="nav-item {% if request.endpoint == 'organizer_events' %}active{% endif %}">
       <i class="fas fa-calendar-alt"></i><span>Events</span>
@@ -62,7 +65,7 @@
     </a>
     {% else %}
     <a href="{{ url_for('student_dashboard') }}" class="nav-item {% if request.endpoint == 'student_dashboard' %}active{% endif %}">
-      <i class="fas fa-th-large"></i><span>Dashboard</span>
+      <i class="fas fa-compass"></i><span>Dashboard</span>
     </a>
     <a href="{{ url_for('student_events') }}" class="nav-item {% if request.endpoint in ('student_events', 'student_event_detail') %}active{% endif %}">
       <i class="fas fa-calendar-alt"></i><span>Browse Events</span>
@@ -392,7 +395,7 @@ window.escHtml = function(s) {
 
   function showNotifToast(data) {
     const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--white);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border-left:4px solid var(--navy);z-index:9999;max-width:360px;animation:slideIn 0.3s ease;';
+    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--white);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border-left:4px solid var(--maroon);z-index:9999;max-width:360px;animation:slideIn 0.3s ease;';
     toast.innerHTML = '<strong style="font-size:0.9rem;color:var(--text);">' + esc(data.title || 'Notification') + '</strong><p style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">' + esc(data.message || '') + '</p>';
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; setTimeout(() => toast.remove(), 500); }, 5000);

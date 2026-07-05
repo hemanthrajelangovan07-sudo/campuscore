@@ -3,6 +3,18 @@
 {% block page_title %}<i class="fas fa-calendar-alt"></i> Events{% endblock %}
 
 {% block head %}
+<style>
+.filter-bar .filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.filter-bar .filter-form .input-wrap { flex: 1 1 200px; min-width: 140px; }
+.filter-bar select,
+.filter-bar input[type="date"] { padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--card-bg); color: var(--text); font-family: inherit; }
+.filter-bar select:focus,
+.filter-bar input[type="date"]:focus { border-color: var(--maroon-light); outline: none; }
+.filter-bar .tags-wrap { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0; }
+.filter-bar .tag-chip { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; color: var(--text-muted); background: var(--card-bg); }
+.filter-bar .tag-chip.active { background: var(--maroon); color: var(--white); border-color: var(--maroon); }
+@media (max-width: 640px) { .filter-bar .filter-form { flex-direction: column; } .filter-bar .filter-form .input-wrap { width: 100%; } }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -14,17 +26,17 @@
 </div>
 
 <div class="tab-bar" style="display: flex; gap: 4px; margin-bottom: 20px; background: var(--white); border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border);">
-  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">All Events</a>
-  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
-  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--navy); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Past</a>
+  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--maroon); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">All Events</a>
+  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--maroon); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
+  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--maroon); color: var(--white);{% else %}color: var(--text-muted);{% endif %}">Past</a>
 </div>
 
 <div class="filter-bar">
-  <form method="GET" class="filter-form">
+  <form method="GET" class="filter-form" id="filterForm">
     <input type="hidden" name="tab" value="{{ tab }}">
     <div class="input-wrap search-wrap">
       <i class="fas fa-search"></i>
-      <input type="text" name="search" placeholder="Search events..." value="{{ search }}"/>
+      <input type="text" name="search" id="searchInput" placeholder="Search events..." value="{{ search }}" autocomplete="off"/>
     </div>
     <select name="category" onchange="this.form.submit()">
       <option value="">All Categories</option>
@@ -32,13 +44,29 @@
         <option {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="btn btn-outline">Filter</button>
-    {% if search or selected_category %}
+    <select name="venue_id" onchange="this.form.submit()">
+      <option value="">All Venues</option>
+      {% for v in venues %}
+        <option value="{{ v.id }}" {% if selected_venue_id == v.id|string %}selected{% endif %}>{{ v.name }}</option>
+      {% endfor %}
+    </select>
+    <input type="date" name="date_from" value="{{ date_from }}" onchange="this.form.submit()" title="From date"/>
+    <input type="date" name="date_to" value="{{ date_to }}" onchange="this.form.submit()" title="To date"/>
+    <button type="submit" class="btn btn-outline" style="white-space:nowrap;">Filter</button>
+    {% if search or selected_category or selected_venue_id or date_from or date_to or selected_tags %}
       <a href="?tab={{ tab }}" class="btn btn-ghost">Clear</a>
     {% endif %}
   </form>
+  {% if all_tags %}
+  <div class="tags-wrap" style="margin-top:8px;">
+    {% for t in all_tags %}
+      <span class="tag-chip {% if t in selected_tags.split(',') %}active{% endif %}" data-tag="{{ t }}">{{ t }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 
+<div id="eventsContainer">
 {% if events %}
 <div class="events-grid">
   {% for event in events %}
@@ -95,11 +123,47 @@
 {% else %}
 <div class="card"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events found</p></div></div>
 {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
+/* ── Debounced AJAX search ─────────────────────────────────────── */
+(function() {
+  var searchInput = document.getElementById('searchInput');
+  if (!searchInput) return;
+  var debounceTimer;
+  searchInput.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+      document.getElementById('filterForm').submit();
+    }, 400);
+  });
+})();
+
+/* ── Tag chips ──────────────────────────────────────────────────── */
+(function() {
+  var chips = document.querySelectorAll('.tag-chip');
+  chips.forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      this.classList.toggle('active');
+      var active = document.querySelectorAll('.tag-chip.active');
+      var tags = Array.from(active).map(function(c) { return c.dataset.tag; });
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'tags';
+      input.value = tags.join(',');
+      var form = document.getElementById('filterForm');
+      var existing = form.querySelector('input[name="tags"]');
+      if (existing) existing.remove();
+      form.appendChild(input);
+      form.submit();
+    });
+  });
+})();
+
+/* ── Socket.IO real-time updates ────────────────────────────────── */
 (function() {
   var socket = window._socket;
   if (!socket) return;

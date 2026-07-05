@@ -13,6 +13,7 @@
     </p>
   </div>
   <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin_events') }}{% else %}{{ url_for('organizer_events') }}{% endif %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+  <button type="button" class="btn btn-sm btn-primary" onclick="openQRScanner()" style="margin-left:auto;"><i class="fas fa-qrcode"></i> Scan QR</button>
 </div>
 
 <div class="card">
@@ -86,7 +87,30 @@
   {% endif %}
 </div>
 
+<!-- QR Scanner Modal -->
+<div id="qrScannerModal" class="qr-modal" style="display:none;">
+  <div class="qr-modal-content">
+    <h3><i class="fas fa-qrcode"></i> Scan Check-in QR</h3>
+    <div id="qrReader" style="width:100%;max-width:300px;margin:0 auto;"></div>
+    <div id="qrResult" style="margin-top:12px;font-size:0.9rem;"></div>
+    <button class="btn btn-sm btn-ghost" onclick="closeQRScanner()" style="margin-top:12px;"><i class="fas fa-times"></i> Close</button>
+  </div>
+</div>
+
 <style>
+.qr-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.qr-modal-content {
+  background: var(--white); border-radius: var(--radius);
+  padding: 32px; text-align: center; max-width: 380px; width: 90%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+.qr-modal-content h3 { margin-bottom: 16px; color: var(--text); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .att-search {
   display: flex;
   align-items: center;
@@ -98,7 +122,7 @@
   border-top: 1px solid var(--border);
 }
 .att-search i {
-  color: var(--navy-light);
+  color: var(--maroon-light);
   font-size: 1rem;
 }
 .att-search input {
@@ -114,8 +138,8 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .att-search input:focus {
-  border-color: var(--navy-light);
-  box-shadow: 0 0 0 3px rgba(26,58,107,0.12);
+  border-color: var(--maroon-light);
+  box-shadow: 0 0 0 3px rgba(131,18,56,0.12);
 }
 .att-search input::placeholder {
   color: var(--text-muted);
@@ -125,11 +149,12 @@
   border-color: var(--border);
 }
 [data-theme="dark"] .att-search input:focus {
-  border-color: var(--gold);
+  border-color: var(--maroon);
   box-shadow: 0 0 0 3px rgba(212,182,90,0.15);
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 function filterAttendance() {
   var term = document.getElementById('attSearch').value.toLowerCase();
@@ -166,5 +191,74 @@ function updateCount() {
 }
 
 document.addEventListener('DOMContentLoaded', updateCount);
+
+var qrScannerInstance = null;
+
+function openQRScanner() {
+  var modal = document.getElementById('qrScannerModal');
+  modal.style.display = 'flex';
+  document.getElementById('qrResult').innerHTML = '';
+
+  var readerEl = document.getElementById('qrReader');
+  readerEl.innerHTML = '';
+
+  if (typeof Html5Qrcode !== 'undefined') {
+    qrScannerInstance = new Html5Qrcode("qrReader");
+    qrScannerInstance.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      function(qrMessage) {
+        handleQRScan(qrMessage);
+      },
+      function(error) { /* ignore */ }
+    ).catch(function(err) {
+      document.getElementById('qrResult').innerHTML = '<span style="color:var(--red);">Camera access denied or unavailable.</span>';
+    });
+  } else {
+    document.getElementById('qrResult').innerHTML = '<span style="color:var(--red);">QR scanner library not loaded. Try refreshing.</span>';
+  }
+}
+
+function closeQRScanner() {
+  if (qrScannerInstance) {
+    qrScannerInstance.stop().then(function() {
+      qrScannerInstance.clear();
+      qrScannerInstance = null;
+    }).catch(function() {});
+  }
+  document.getElementById('qrScannerModal').style.display = 'none';
+}
+
+function handleQRScan(payload) {
+  if (qrScannerInstance) {
+    qrScannerInstance.pause();
+  }
+  var resultEl = document.getElementById('qrResult');
+  resultEl.innerHTML = '<span style="color:var(--brass);"><i class="fas fa-spinner fa-spin"></i> Verifying...</span>';
+
+  fetch('/organizer/checkin/scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ qr_payload: payload })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.status === 'checked_in') {
+      resultEl.innerHTML = '<span style="color:green;font-weight:600;"><i class="fas fa-check-circle"></i> Checked in: ' + data.name + '</span>';
+      setTimeout(closeQRScanner, 1500);
+      location.reload();
+    } else if (data.error === 'already_checked_in') {
+      resultEl.innerHTML = '<span style="color:orange;"><i class="fas fa-exclamation-triangle"></i> Already checked in at ' + data.at + '</span>';
+      if (qrScannerInstance) qrScannerInstance.resume();
+    } else {
+      resultEl.innerHTML = '<span style="color:var(--red);"><i class="fas fa-times-circle"></i> ' + (data.error || 'Invalid QR') + '</span>';
+      if (qrScannerInstance) qrScannerInstance.resume();
+    }
+  })
+  .catch(function() {
+    resultEl.innerHTML = '<span style="color:var(--red);">Network error</span>';
+    if (qrScannerInstance) qrScannerInstance.resume();
+  });
+}
 </script>
 {% endblock %}

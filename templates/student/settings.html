@@ -28,7 +28,9 @@
   <div class="settings-tabs">
     <button class="settings-tab active" data-tab="profile"><i class="fas fa-user"></i> Profile</button>
     <button class="settings-tab" data-tab="notifications"><i class="fas fa-bell"></i> Notifications</button>
+    <button class="settings-tab" data-tab="calendar"><i class="fas fa-calendar-alt"></i> Calendar</button>
     <button class="settings-tab" data-tab="appearance"><i class="fas fa-palette"></i> Appearance</button>
+    <button class="settings-tab" data-tab="data"><i class="fas fa-database"></i> Data</button>
   </div>
 
   {# Settings Form #}
@@ -91,6 +93,99 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-bell"></i>
+                <div>
+                  <strong>Event Reminders</strong>
+                  <span>Notify me before events start</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="event_reminders" value="0"/>
+                <input type="checkbox" name="event_reminders" value="1" {% if prefs.event_reminders %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                  <strong>Registration Confirmations</strong>
+                  <span>Get notified when you register for an event</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="registration_confirmations" value="0"/>
+                <input type="checkbox" name="registration_confirmations" value="1" {% if prefs.registration_confirmations %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-clock"></i>
+                <div>
+                  <strong>Waitlist Updates</strong>
+                  <span>Receive updates when you move up the waitlist</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="waitlist_updates" value="0"/>
+                <input type="checkbox" name="waitlist_updates" value="1" {% if prefs.waitlist_updates %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-certificate"></i>
+                <div>
+                  <strong>Certificate Ready</strong>
+                  <span>Get notified when certificates are available</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="certificate_ready" value="0"/>
+                <input type="checkbox" name="certificate_ready" value="1" {% if prefs.certificate_ready %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="settings-notif-row">
+              <div class="settings-notif-info">
+                <i class="fas fa-megaphone"></i>
+                <div>
+                  <strong>New Events</strong>
+                  <span>Get notified about new events on campus</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="hidden" name="marketing_new_events" value="0"/>
+                <input type="checkbox" name="marketing_new_events" value="1" {% if prefs.marketing_new_events %}checked{% endif %}/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# TAB: Calendar #}
+      <div class="settings-panel" id="tab-calendar">
+        <div class="settings-panel-body">
+          <h4 class="settings-panel-title"><i class="fas fa-calendar-alt"></i> Calendar Sync</h4>
+          <p class="settings-panel-desc">Sync your registered events with your phone or desktop calendar.</p>
+          <div style="margin-bottom:20px;">
+            <label style="font-size:0.88rem;font-weight:600;display:block;margin-bottom:6px;">Single Event Export</label>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">From your My Events page, click the <i class="fas fa-calendar-plus"></i> icon to download a .ics file for any registered event.</p>
+          </div>
+          <div>
+            <label style="font-size:0.88rem;font-weight:600;display:block;margin-bottom:6px;">Subscription Feed (auto-updating)</label>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Copy this URL into your calendar app (Google Calendar, Apple Calendar, Outlook) to see all your upcoming registered events.</p>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" readonly value="{{ feed_url }}" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.82rem;background:var(--off-white);color:var(--text);" onclick="this.select()"/>
+              <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText('{{ feed_url }}').then(function(){var b=this;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},2000);}.bind(this));this.textContent='Copy'" style="white-space:nowrap;">Copy</button>
+            </div>
+            <form method="POST" action="{{ url_for('regenerate_calendar_token') }}" style="margin-top:12px;">
+              <button type="submit" class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="return confirm('Regenerating will invalidate your current feed URL. Continue?')"><i class="fas fa-sync"></i> Regenerate Feed Token</button>
+            </form>
           </div>
         </div>
       </div>
@@ -118,6 +213,38 @@
         </div>
       </div>
 
+      <div class="settings-panel" id="tab-data">
+        <div class="settings-panel-body">
+          <h4 class="settings-panel-title"><i class="fas fa-database"></i> Data &amp; Privacy</h4>
+          <p class="settings-panel-desc">Export your data or request account deletion.</p>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="padding:20px;background:var(--bg-alt);border-radius:var(--radius-sm);">
+              <h5 style="margin:0 0 4px;font-size:0.95rem;">Export My Data</h5>
+              <p style="margin:0 0 12px;font-size:0.85rem;color:var(--text-muted);">Download a JSON file of your profile, registrations, feedback, and certificates.</p>
+              <a href="{{ url_for('export_my_data') }}" class="btn btn-sm btn-outline"><i class="fas fa-download"></i> Export Data</a>
+            </div>
+            <div style="padding:20px;background:var(--bg-alt);border-radius:var(--radius-sm);{% if deletion_request %}border:1px solid var(--gold);{% endif %}">
+              {% if deletion_request %}
+              <h5 style="margin:0 0 4px;font-size:0.95rem;color:var(--gold);">Deletion Scheduled</h5>
+              <p style="margin:0 0 12px;font-size:0.85rem;color:var(--text-muted);">
+                Your account is scheduled for deletion on {{ deletion_request.scheduled_for.strftime('%d %B %Y') }}.
+                You can cancel this request before that date.
+              </p>
+              <form method="POST" action="{{ url_for('cancel_account_deletion') }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-primary" style="background:var(--green);border-color:var(--green);"><i class="fas fa-undo"></i> Cancel Deletion</button>
+              </form>
+              {% else %}
+              <h5 style="margin:0 0 4px;font-size:0.95rem;">Delete Account</h5>
+              <p style="margin:0 0 12px;font-size:0.85rem;color:var(--text-muted);">Request deletion of your account and personal data. A 14-day grace period applies.</p>
+              <form method="POST" action="{{ url_for('request_account_deletion') }}" style="display:inline;" onsubmit="return confirm('Are you sure? Your account will be deleted after 14 days. This cannot be undone once processed.');">
+                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Request Deletion</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="settings-footer">
         <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
       </div>
@@ -133,7 +260,7 @@
 
 /* Profile Summary Card */
 .settings-profile-card {
-  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
   border: none;
   margin-bottom: 0;
   border-radius: var(--radius) var(--radius) 0 0;
@@ -146,8 +273,8 @@
 }
 .settings-avatar {
   width: 76px; height: 76px; border-radius: 50%;
-  background: var(--gold);
-  color: var(--navy-dark);
+  background: var(--maroon);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 2rem; font-weight: 700;
   flex-shrink: 0;
@@ -200,9 +327,9 @@
 .settings-tab i { font-size: 1.05rem; }
 .settings-tab:hover { color: var(--text); background: var(--off-white); }
 .settings-tab.active {
-  color: var(--navy);
+  color: var(--maroon);
   background: var(--off-white);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--maroon);
   font-weight: 600;
 }
 .settings-tab:not(:last-child)::after {
@@ -220,11 +347,11 @@
 .settings-panel-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--maroon);
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 8px;
 }
-.settings-panel-title i { color: var(--gold); font-size: 1.1rem; }
+.settings-panel-title i { color: var(--maroon); font-size: 1.1rem; }
 .settings-panel-desc {
   font-size: 0.92rem;
   color: var(--text-muted);
@@ -262,7 +389,7 @@
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px;
   background: white;
-  color: var(--navy-light);
+  color: var(--maroon-light);
   font-size: 1rem;
   border: 1px solid var(--border);
 }
@@ -306,7 +433,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 .toggle-switch input:checked + .toggle-slider {
-  background: var(--navy-light);
+  background: var(--maroon-light);
 }
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(24px);
@@ -339,7 +466,9 @@
   var panels = {
     profile: document.getElementById('tab-profile'),
     notifications: document.getElementById('tab-notifications'),
+    calendar: document.getElementById('tab-calendar'),
     appearance: document.getElementById('tab-appearance'),
+    data: document.getElementById('tab-data'),
   };
 
   tabs.forEach(function(tab) {

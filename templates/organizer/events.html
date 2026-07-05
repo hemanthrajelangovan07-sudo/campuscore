@@ -19,9 +19,9 @@
 </div>
 
 <div class="tab-bar" style="display: flex; gap: 4px; margin-bottom: 20px; background: white; border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border);">
-  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">All Events</a>
-  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
-  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--navy); color: white;{% else %}color: var(--text-muted);{% endif %}">Past</a>
+  <a href="?tab=all&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'all' or not tab %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">All Events</a>
+  <a href="?tab=upcoming&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'upcoming' %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">Upcoming</a>
+  <a href="?tab=past&search={{ search }}&category={{ selected_category }}" class="tab-btn" style="flex: 1; padding: 8px 16px; text-align: center; border-radius: 6px; font-size: 0.85rem; font-weight: 500; {% if tab == 'past' %}background: var(--maroon); color: white;{% else %}color: var(--text-muted);{% endif %}">Past</a>
 </div>
 
 <!-- Filters -->
@@ -53,6 +53,11 @@
     <div class="event-card">
       <div class="event-card-header">
         <span class="badge badge-cat">{{ event.category }}</span>
+        {% if event.approval_status == 'pending' %}
+          <span class="badge badge-pending">Pending</span>
+        {% elif event.approval_status == 'rejected' %}
+          <span class="badge badge-rejected">Rejected</span>
+        {% endif %}
         {% if event.date < today %}
           <span class="badge badge-past">Past</span>
         {% elif event.date == today %}
@@ -81,6 +86,7 @@
         </div>
         <div class="action-btns">
           <a href="{{ url_for('organizer_manage_attendance', event_id=event.id) }}" class="btn btn-sm btn-outline">View</a>
+          <a href="{{ url_for('organizer_event_stats', event_id=event.id) }}" class="btn btn-sm btn-outline" style="color:var(--brass);border-color:var(--brass);"><i class="fas fa-chart-bar"></i></a>
           <a href="{{ url_for('organizer_edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
           <form method="POST" action="{{ url_for('organizer_delete_event', event_id=event.id) }}"
                 onsubmit="return confirm('Delete this event and all its data?')">
@@ -95,6 +101,6 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="card"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events found</p></div></div>
+<div class="card"><div class="empty-state"><p>No events found</p></div></div>
 {% endif %}
 {% endblock %}

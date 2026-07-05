@@ -14,7 +14,7 @@
     background: var(--off-white); transition: border-color .2s, box-shadow .2s; outline: none;
   }
   .compose-body textarea:focus {
-    border-color: var(--navy-light); box-shadow: 0 0 0 4px rgba(37,81,160,.08); background: var(--white);
+    border-color: var(--maroon-light); box-shadow: 0 0 0 4px rgba(131,18,56,.08); background: var(--white);
   }
   .compose-body textarea::placeholder { color: var(--text-muted); }
 
@@ -181,8 +181,8 @@
   /* ── Dark Mode ── */
   [data-theme="dark"] .page-heading { color: var(--text); }
   [data-theme="dark"] .card-header h3 { color: var(--text); }
-  [data-theme="dark"] .btn-primary { background: var(--navy-light); }
-  [data-theme="dark"] .btn-primary:hover { background: var(--navy); }
+  [data-theme="dark"] .btn-primary { background: var(--maroon-light); }
+  [data-theme="dark"] .btn-primary:hover { background: var(--maroon); }
 </style>
 {% endblock %}
 
@@ -488,7 +488,7 @@
     const el = document.createElement('div');
     el.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;min-width:280px;' +
       'background:var(--white);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.15);' +
-      'border-left:4px solid var(--navy);padding:14px 18px;animation:slideIn .3s ease;';
+      'border-left:4px solid var(--maroon);padding:14px 18px;animation:slideIn .3s ease;';
     el.innerHTML = '<strong style="font-size:.85rem;color:var(--text);">' + esc(msg) + '</strong>';
     document.body.appendChild(el);
     setTimeout(function () {

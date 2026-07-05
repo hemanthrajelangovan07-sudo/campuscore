@@ -22,7 +22,9 @@ def create_app(config_object="app.config.Config") -> Flask:
     # ── Models (import so Migrate can see them) ────────────────────────────
     from app.models import (  # noqa: F401
         event, user, registration, attendance, announcement, score,
-        notification, user_setting, system_setting,
+        notification, user_setting, system_setting, venue,
+        audit_log, team, certificate, certificate_signatory,
+        notification_preference,
     )
 
     # ── Blueprints ────────────────────────────────────────────────────────

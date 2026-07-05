@@ -15,18 +15,51 @@
     {% if event.pdf_file %}<div style="margin-bottom:16px;"><a href="{{ url_for('static', filename='uploads/' + event.pdf_file) }}" target="_blank" class="btn btn-primary" style="background:var(--red);border-color:var(--red);"><i class="fas fa-file-pdf"></i> Download Event Brochure</a></div>{% endif %}
     <div class="card"><div class="card-header"><h3><i class="fas fa-info-circle"></i> Description</h3></div><div style="padding:20px;font-size:0.9rem;line-height:1.7;">{{ event.description }}</div></div>
     {% if tags %}<div class="card"><div class="card-header"><h3><i class="fas fa-tags"></i> Tags</h3></div><div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:6px;">{% for tag in tags %}<span class="tag-pill">{{ tag }}</span>{% endfor %}</div></div>{% endif %}
+    {% if is_registered %}
+    <div class="card" id="feedbackSection">
+      <div class="card-header"><h3><i class="fas fa-star"></i> Rate This Event</h3></div>
+      <div style="padding:20px;">
+        {% if event.date <= today %}
+          {% if feedback %}
+          <p style="color:var(--text-muted);"><i class="fas fa-check-circle" style="color:var(--green);"></i> You rated this {{ feedback.rating }}/5. {% if feedback.comment %}"{{ feedback.comment }}"{% endif %}</p>
+          {% elif not has_attended %}
+          <p style="color:var(--text-muted);">Attendance must be marked before you can submit feedback.</p>
+          {% else %}
+          <div id="feedbackForm">
+            <p style="margin-bottom:12px;font-size:0.88rem;color:var(--text-muted);">How was your experience?</p>
+            <div style="display:flex;gap:6px;margin-bottom:12px;" id="starRating">
+              {% for i in range(1, 6) %}
+              <button type="button" class="star-btn" data-value="{{ i }}" style="background:none;border:none;font-size:1.6rem;cursor:pointer;color:var(--border);transition:color 0.15s;padding:0 2px;">&#9733;</button>
+              {% endfor %}
+            </div>
+            <textarea id="feedbackComment" placeholder="Any comments? (optional)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;resize:vertical;min-height:60px;margin-bottom:10px;background:var(--bg);color:var(--text);"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="submitFeedback({{ event.id }})">Submit Feedback</button>
+            <span id="feedbackMsg" style="margin-left:10px;font-size:0.85rem;"></span>
+          </div>
+          {% endif %}
+        {% else %}
+        <p style="color:var(--text-muted);font-size:0.85rem;">Feedback will be available after the event ends.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
   <div>
     <div class="card">
       <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Event Details</h3></div>
       <div style="padding:20px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-          <div style="padding:16px;background:var(--off-white);border-radius:var(--radius-sm);text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--navy);">{{ reg_count }}</div><div style="font-size:0.78rem;color:var(--text-muted);">Registered</div></div>
+          <div style="padding:16px;background:var(--off-white);border-radius:var(--radius-sm);text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--maroon);">{{ reg_count }}</div><div style="font-size:0.78rem;color:var(--text-muted);">Registered</div></div>
           <div style="padding:16px;background:var(--off-white);border-radius:var(--radius-sm);text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--teal);">{{ event.max_participants }}</div><div style="font-size:0.78rem;color:var(--text-muted);">Capacity</div></div>
         </div>
         {% if organizer %}<p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-user"></i> <strong>Organizer:</strong> {{ organizer.name }}</p>{% endif %}
         {% if event.venue %}<p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-map-marker-alt"></i> <strong>Venue:</strong> {{ event.venue }}</p>{% endif %}
         <p style="font-size:0.85rem;margin-bottom:8px;"><i class="fas fa-tag"></i> <strong>Category:</strong> <span class="badge badge-cat">{{ event.category }}</span></p>
+        {% if is_registered %}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <a href="{{ url_for('export_event_ics', event_id=event.id) }}" class="btn btn-sm btn-outline" style="width:100%;"><i class="fas fa-calendar-plus"></i> Add to Calendar</a>
+        </div>
+        {% endif %}
       </div>
     </div>
     <div class="card">
@@ -47,4 +80,52 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<style>
+.star-btn:hover,
+.star-btn.active { color: var(--gold) !important; }
+</style>
+<script>
+let selectedRating = 0;
+document.querySelectorAll('.star-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    selectedRating = parseInt(this.dataset.value);
+    document.querySelectorAll('.star-btn').forEach(function(s, i) {
+      s.style.color = i < selectedRating ? 'var(--gold)' : 'var(--border)';
+    });
+  });
+  btn.addEventListener('mouseenter', function() {
+    var val = parseInt(this.dataset.value);
+    document.querySelectorAll('.star-btn').forEach(function(s, i) {
+      s.style.color = i < val ? 'var(--gold)' : 'var(--border)';
+    });
+  });
+  btn.addEventListener('mouseleave', function() {
+    document.querySelectorAll('.star-btn').forEach(function(s, i) {
+      s.style.color = i < selectedRating ? 'var(--gold)' : 'var(--border)';
+    });
+  });
+});
+
+function submitFeedback(eventId) {
+  if (!selectedRating) { document.getElementById('feedbackMsg').textContent = 'Please select a rating.'; return; }
+  var comment = document.getElementById('feedbackComment').value;
+  document.getElementById('feedbackMsg').textContent = 'Submitting...';
+  fetch('/api/events/' + eventId + '/feedback', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({rating: selectedRating, comment: comment})
+  }).then(function(r) {
+    if (r.status === 409) { document.getElementById('feedbackMsg').textContent = 'Already submitted.'; return; }
+    if (r.status === 403) { document.getElementById('feedbackMsg').textContent = 'Attendance required.'; return; }
+    if (!r.ok) { document.getElementById('feedbackMsg').textContent = 'Error submitting.'; return; }
+    document.getElementById('feedbackForm').innerHTML = '<p style="color:var(--green);"><i class="fas fa-check-circle"></i> Feedback submitted. Thank you!</p>';
+  }).catch(function() {
+    document.getElementById('feedbackMsg').textContent = 'Network error.';
+  });
+}
+</script>
 {% endblock %}
