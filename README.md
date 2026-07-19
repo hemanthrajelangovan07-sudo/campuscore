@@ -1,10 +1,11 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/Python-3.11.9-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white"/>
+<img src="https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
+<img src="https://img.shields.io/badge/Flask-3.1-000000?style=for-the-badge&logo=flask&logoColor=white"/>
 <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white"/>
 <img src="https://img.shields.io/badge/Socket.IO-4.7.2-010101?style=for-the-badge&logo=socket.io&logoColor=white"/>
 <img src="https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white"/>
+<img src="https://img.shields.io/badge/flask--limiter-4.1-red?style=for-the-badge"/>
 <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge"/>
 
 # CampusCore
@@ -51,6 +52,7 @@ The system supports three distinct user roles (**Student**, **Organizer**, **Adm
 - Traditional email/password login with Werkzeug secure password hashing
 - Session-based authentication with CSRF protection (Flask-WTF)
 - Role-based access control across all routes — **Student / Organizer / Admin**
+- Rate limiting via **Flask-Limiter** to prevent brute-force and abuse
 
 ### Event Management
 - Full CRUD for events — organizers can create, publish, edit, and close events
@@ -70,10 +72,11 @@ The system supports three distinct user roles (**Student**, **Organizer**, **Adm
 - Downloadable by students upon event completion
 
 ### UI / UX
-- Custom **navy/gold** design theme with a 645-line handcrafted stylesheet
+- Custom **navy/gold** design theme with a handcrafted stylesheet
 - Dark mode toggle, responsive sidebar, and Font Awesome icon set
 - Playfair Display + DM Sans typography via Google Fonts
 - Zero SPA framework — pure Jinja2 server-side rendering + Vanilla JS
+- Fully responsive admin, organizer, and student dashboards
 
 ---
 
@@ -92,6 +95,7 @@ The system supports three distinct user roles (**Student**, **Organizer**, **Adm
 | Authlib | ≥ 1.3 | Google OAuth 2.0 / OpenID Connect |
 | ReportLab + Pillow | ≥ 4.1 | PDF certificate generation |
 | Werkzeug | latest | Password hashing, secure filenames |
+| Flask-Limiter | ≥ 4.1 | Rate limiting / abuse prevention |
 | Requests / python-dotenv | latest | HTTP client, environment config |
 
 ### Frontend
@@ -194,6 +198,11 @@ flask db upgrade
 python run.py
 ```
 
+> The app automatically seeds demo users on first run:
+> - **Admin:** `admin@sist.ac.in` / `admin123`
+> - **Organizer:** `organizer@sist.ac.in` / `organizer123`
+> - **Student:** `student@sist.ac.in` / `student123`
+
 **7. (Optional) Start the Node.js email microservice**
 ```bash
 cd email-service
@@ -205,6 +214,8 @@ node index.js
 ```
 http://localhost:5000
 ```
+
+> **Note:** If you encounter any missing dependency warnings, ensure your virtual environment is activated before running pip commands.
 
 ---
 
