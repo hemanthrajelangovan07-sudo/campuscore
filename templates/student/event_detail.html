@@ -86,7 +86,7 @@
 {{ super() }}
 <style>
 .star-btn:hover,
-.star-btn.active { color: var(--gold) !important; }
+.star-btn.active { color: var(--amber) !important; }
 </style>
 <script>
 let selectedRating = 0;
@@ -94,18 +94,18 @@ document.querySelectorAll('.star-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     selectedRating = parseInt(this.dataset.value);
     document.querySelectorAll('.star-btn').forEach(function(s, i) {
-      s.style.color = i < selectedRating ? 'var(--gold)' : 'var(--border)';
+      s.style.color = i < selectedRating ? 'var(--amber)' : 'var(--border)';
     });
   });
   btn.addEventListener('mouseenter', function() {
     var val = parseInt(this.dataset.value);
     document.querySelectorAll('.star-btn').forEach(function(s, i) {
-      s.style.color = i < val ? 'var(--gold)' : 'var(--border)';
+      s.style.color = i < val ? 'var(--amber)' : 'var(--border)';
     });
   });
   btn.addEventListener('mouseleave', function() {
     document.querySelectorAll('.star-btn').forEach(function(s, i) {
-      s.style.color = i < selectedRating ? 'var(--gold)' : 'var(--border)';
+      s.style.color = i < selectedRating ? 'var(--amber)' : 'var(--border)';
     });
   });
 });

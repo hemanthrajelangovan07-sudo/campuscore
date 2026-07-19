@@ -79,7 +79,7 @@
               {% if log.action == 'created' %}
                 <span class="badge badge-registered" title="Created"><i class="fas fa-plus-circle"></i> Created</span>
               {% elif log.action == 'updated' %}
-                <span class="badge" style="background:#e0f2fe;color:#0369a1;" title="Updated"><i class="fas fa-pen"></i> Updated</span>
+                <span class="badge" style="background:var(--maroon-pale);color:var(--maroon);" title="Updated"><i class="fas fa-pen"></i> Updated</span>
               {% elif log.action == 'deleted' %}
                 <span class="badge badge-absent" title="Deleted"><i class="fas fa-trash"></i> Deleted</span>
               {% elif log.action == 'status_toggled' %}
@@ -89,7 +89,7 @@
               {% elif log.action == 'deactivated' %}
                 <span class="badge badge-absent" title="Deactivated"><i class="fas fa-pause-circle"></i> Deactivated</span>
               {% elif log.action == 'force_password_reset' %}
-                <span class="badge" style="background:#fef3c7;color:#92400e;" title="Force Reset"><i class="fas fa-lock"></i> Force Reset</span>
+                <span class="badge" style="background:rgba(200,149,74,0.1);color:var(--amber);" title="Force Reset"><i class="fas fa-lock"></i> Force Reset</span>
               {% else %}
                 <span class="badge badge-org">{{ log.action|title }}</span>
               {% endif %}
@@ -212,8 +212,9 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
-  color: white;
+  background: var(--maroon-pale);
+  color: var(--maroon);
+  border: 2px solid var(--maroon);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -223,8 +224,8 @@
 }
 .profile-card-meta h2 {
   margin: 0;
-  font-family: 'Playfair Display', serif;
   font-size: 1.3rem;
+  font-weight: 600;
   color: var(--maroon);
 }
 .profile-card-meta p {
@@ -257,7 +258,7 @@
   pointer-events: all;
 }
 .notify-panel {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12px;
   width: 520px;
   max-width: 90vw;
@@ -276,7 +277,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 .notify-panel-title {
   display: flex;
@@ -286,18 +287,18 @@
 .notify-panel-title h3 {
   margin: 0;
   font-size: 1.05rem;
-  color: #831238;
+  color: var(--maroon);
 }
 .notify-panel-title p {
   margin: 2px 0 0;
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 .notify-avatar {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #831238, #9e1645);
+  background: var(--maroon);
   color: #fff;
   display: flex;
   align-items: center;
@@ -310,15 +311,15 @@
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
   line-height: 1;
 }
 .notify-close:hover {
-  background: #f1f5f9;
-  color: #333;
+  background: var(--maroon-pale);
+  color: var(--text);
 }
 .notify-panel-body {
   padding: 20px 24px;
@@ -332,27 +333,27 @@
   display: block;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #831238;
+  color: var(--maroon);
   margin-bottom: 6px;
 }
 .notify-field input,
 .notify-field textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.88rem;
-  color: #1e293b;
-  background: #fff;
+  color: var(--text);
+  background: var(--bg);
   transition: border-color 0.2s;
   box-sizing: border-box;
   outline: none;
 }
 .notify-field input:focus,
 .notify-field textarea:focus {
-  border-color: #831238;
-  box-shadow: 0 0 0 3px rgba(131,18,56,0.12);
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px var(--maroon-glow);
 }
 .notify-field textarea {
   resize: vertical;
@@ -380,7 +381,7 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
 }
 </style>
 

@@ -18,37 +18,33 @@
 
 {# KPI Cards #}
 <div class="stats-grid">
-  <div class="stat-card stat-blue" style="animation-delay:0s;">
-    <i class="fas fa-calendar-alt stat-icon"></i>
+  <div class="stat-card" style="animation-delay:0s;">
+    <div class="stat-icon maroon"><i class="fas fa-calendar-alt"></i></div>
     <div>
       <span class="stat-value">{{ total_events }}</span>
       <span class="stat-label">Total Events</span>
     </div>
-    <div class="stat-wave"></div>
   </div>
-  <div class="stat-card stat-teal" style="animation-delay:0.05s;">
-    <i class="fas fa-user-check stat-icon"></i>
+  <div class="stat-card" style="animation-delay:0.05s;">
+    <div class="stat-icon maroon"><i class="fas fa-user-check"></i></div>
     <div>
       <span class="stat-value">{{ total_regs }}</span>
       <span class="stat-label">Total Registrations</span>
     </div>
-    <div class="stat-wave"></div>
   </div>
-  <div class="stat-card stat-green" style="animation-delay:0.1s;">
-    <i class="fas fa-users stat-icon"></i>
+  <div class="stat-card" style="animation-delay:0.1s;">
+    <div class="stat-icon maroon"><i class="fas fa-users"></i></div>
     <div>
       <span class="stat-value">{{ total_pres }}</span>
       <span class="stat-label">Total Attendees</span>
     </div>
-    <div class="stat-wave"></div>
   </div>
-  <div class="stat-card stat-gold" style="animation-delay:0.15s;">
-    <i class="fas fa-percent stat-icon"></i>
+  <div class="stat-card" style="animation-delay:0.15s;">
+    <div class="stat-icon maroon"><i class="fas fa-percent"></i></div>
     <div>
       <span class="stat-value">{{ avg_rate }}%</span>
       <span class="stat-label">Avg Attendance Rate</span>
     </div>
-    <div class="stat-wave"></div>
   </div>
 </div>
 
@@ -304,10 +300,7 @@
 /* ── Dark Mode ── */
 [data-theme="dark"] .page-heading { color: var(--text); }
 [data-theme="dark"] .card-header h3 { color: var(--text); }
-[data-theme="dark"] .stat-blue { background: linear-gradient(135deg, var(--maroon-dark), var(--maroon)); }
-[data-theme="dark"] .stat-gold { background: linear-gradient(135deg, var(--maroon-dark), var(--maroon-light)); }
-[data-theme="dark"] .stat-teal { background: linear-gradient(135deg, var(--maroon), var(--gold)); }
-[data-theme="dark"] .stat-green { background: linear-gradient(135deg, var(--gold), var(--maroon-light)); }
+[data-theme="dark"] .stat-card { background: var(--bg-card); }
 [data-theme="dark"] .card-chart-body { background: var(--off-white); }
 [data-theme="dark"] .chart-controls select {
   background-color: var(--white);
@@ -334,16 +327,16 @@
   'use strict';
 
   var rootStyle = getComputedStyle(document.documentElement);
-  var maroon = rootStyle.getPropertyValue('--maroon').trim() || '#831238';
-  var gold   = rootStyle.getPropertyValue('--gold').trim() || '#ffffff';
+  var maroon = rootStyle.getPropertyValue('--maroon').trim() || '#6B1F2A';
+  var amber  = rootStyle.getPropertyValue('--amber').trim() || '#C8954A';
   var teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
   var green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
   var red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
   var textMuted = rootStyle.getPropertyValue('--text-muted').trim() || '#7a8499';
-  var border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
+  var border    = rootStyle.getPropertyValue('--border').trim() || '#d4c8c8';
   var whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
 
-  var palette = [maroon, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+  var palette = [maroon, amber, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
 
   Chart.defaults.color = textMuted;
   Chart.defaults.borderColor = border;
@@ -482,15 +475,15 @@
   // ── Theme switch ─────────────────────────────────────────────────────
   function refreshColors() {
     rootStyle = getComputedStyle(document.documentElement);
-    maroon = rootStyle.getPropertyValue('--maroon').trim() || '#831238';
-    gold   = rootStyle.getPropertyValue('--gold').trim() || '#ffffff';
+    maroon = rootStyle.getPropertyValue('--maroon').trim() || '#6B1F2A';
+    amber  = rootStyle.getPropertyValue('--amber').trim() || '#C8954A';
     teal   = rootStyle.getPropertyValue('--teal').trim() || '#0d9488';
     green  = rootStyle.getPropertyValue('--green').trim() || '#16a34a';
     red    = rootStyle.getPropertyValue('--red').trim() || '#dc2626';
     textMuted = rootStyle.getPropertyValue('--text-muted').trim() || '#7a8499';
-    border    = rootStyle.getPropertyValue('--border').trim() || '#e2e8f0';
+    border    = rootStyle.getPropertyValue('--border').trim() || '#d4c8c8';
     whiteBg   = rootStyle.getPropertyValue('--white').trim() || '#ffffff';
-    palette = [maroon, gold, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+    palette = [maroon, amber, teal, green, '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
     Chart.defaults.color = textMuted;
     Chart.defaults.borderColor = border;
     if (typeof catChart !== 'undefined') catChart.update();

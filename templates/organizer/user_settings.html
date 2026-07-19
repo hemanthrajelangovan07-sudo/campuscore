@@ -203,8 +203,9 @@
 
 /* Profile Summary Card */
 .settings-profile-card {
-  background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
-  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-bottom: none;
   margin-bottom: 0;
   border-radius: var(--radius) var(--radius) 0 0;
 }
@@ -224,9 +225,8 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .settings-profile-info h2 {
-  font-family: 'Playfair Display', serif;
   font-size: 1.4rem;
-  color: white;
+  color: var(--maroon);
   margin-bottom: 6px;
 }
 .settings-profile-info p {
@@ -361,7 +361,7 @@
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: #cbd5e1;
+  background: var(--border);
   border-radius: 28px;
   transition: 0.25s;
 }
@@ -397,7 +397,7 @@
 [data-theme="dark"] .settings-notif-row { background: var(--off-white); }
 [data-theme="dark"] .settings-notif-row:hover { background: #1e2a4a; }
 [data-theme="dark"] .settings-notif-info > i { background: var(--white); border-color: var(--border); }
-[data-theme="dark"] .toggle-slider { background: #475569; }
+[data-theme="dark"] .toggle-slider { background: var(--text-muted); }
 [data-theme="dark"] .settings-profile-info .badge { background: rgba(255,255,255,0.12); }
 </style>
 {% endblock %}

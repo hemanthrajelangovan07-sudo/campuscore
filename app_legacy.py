@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, send_from_directory, current_app, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file, send_from_directory, current_app, abort, Response
 from flask_socketio import emit, join_room, leave_room
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,6 +12,7 @@ import json
 import csv
 import re
 import uuid
+import random
 import secrets
 import hmac
 import hashlib
@@ -364,9 +365,7 @@ def export_my_data():
     registrations = Registration.query.filter_by(user_id=user.id).filter(
         Registration.deleted_at.is_(None)
     ).all()
-    feedbacks = EventFeedback.query.filter_by(user_id=user.id).filter(
-        EventFeedback.deleted_at.is_(None)
-    ).all()
+    feedbacks = EventFeedback.query.filter_by(user_id=user.id).all()
     certificate_regs = Registration.query.filter_by(user_id=user.id, status='confirmed').filter(
         Registration.deleted_at.is_(None)
     ).filter(Registration.certificate.has()).all()
@@ -2561,6 +2560,35 @@ def organizer_user_settings():
     return render_template('organizer/user_settings.html', user=user, settings=settings, prefs=prefs)
 
 
+@app.route('/organizer/profile', methods=['GET', 'POST'])
+@organizer_required
+def organizer_profile():
+    user = get_current_user()
+    if request.method == 'POST':
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
+        college = request.form.get('college', '').strip()
+        department = request.form.get('department', '').strip()
+        phone = request.form.get('phone', '').strip()
+        if not first_name or not email:
+            flash('First name and email are required.', 'danger')
+            return render_template('organizer/profile.html', user=user, edit_mode=True)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.name = f'{first_name} {last_name}'.strip()
+        user.email = email
+        user.college = college
+        user.department = department
+        user.phone = phone
+        session['user_name'] = user.name
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('organizer_profile'))
+    edit_mode = request.args.get('edit', '0') == '1'
+    return render_template('organizer/profile.html', user=user, edit_mode=edit_mode)
+
+
 @app.route('/events/create', methods=['GET', 'POST'])
 @organizer_required
 def organizer_create_event():
@@ -3434,25 +3462,6 @@ def init_db():
         else:
             admin_id = User.query.filter_by(email='admin@sist.ac.in').first().id
 
-        # Create demo student
-        student_id = None
-        if not User.query.filter_by(email='student@sist.ac.in').first():
-            student = User(
-                name='Demo Student', first_name='Demo', last_name='Student',
-                email='student@sist.ac.in',
-                password=generate_password_hash('student123'),
-                role='student',
-                reg_number='SIST2024001',
-                department='Computer Science Engineering',
-                college='Sathyabama Institute of Science and Technology',
-                participant_id=generate_participant_id()
-            )
-            db.session.add(student)
-            db.session.flush()
-            student_id = student.id
-        else:
-            student_id = User.query.filter_by(email='student@sist.ac.in').first().id
-
         # Create demo organizer
         org_id = None
         if not User.query.filter_by(email='organizer@sist.ac.in').first():
@@ -3470,6 +3479,89 @@ def init_db():
             org_id = org.id
         else:
             org_id = User.query.filter_by(email='organizer@sist.ac.in').first().id
+
+        # Create 100 demo students
+        student_ids = []
+        first_names = ['Aarav','Vivaan','Aditya','Vihaan','Arjun','Sai','Reyansh','Ayaan','Krishna','Ishaan',
+                       'Ananya','Diya','Myra','Aadhya','Sara','Aanya','Riya','Ira','Priya','Nitya',
+                       'Rahul','Vikram','Siddharth','Karan','Rohan','Amit','Deepak','Manish','Tarun','Akash',
+                       'Pooja','Neha','Kavya','Shreya','Divya','Swati','Meera','Tanvi','Isha','Bhavna',
+                       'Aryan','Ravi','Kunal','Harsh','Nitin','Gaurav','Chetan','Yash','Mohan','Vijay',
+                       'Lakshmi','Padma','Anjali','Geeta','Rita','Sita','Gita','Maya','Uma','Kala',
+                       'Suresh','Mohan','Dinesh','Ramesh','Rajesh','Jitendra','Prakash','Mahesh','Naresh','Harish',
+                       'Sneha','Kiran','Lata','Asha','Vani','Rani','Mala','Pari','Tara','Rama',
+                       'Amita','Anita','Sunita','Kanta','Shanti','Prema','Bina','Rupa','Nirmala','Kamala',
+                       'Varun','Arun','Kiran','Jay','Dev','Om','Shiv','Ram','Hari','Krish']
+        last_names = ['Sharma','Verma','Singh','Kumar','Patel','Reddy','Gupta','Joshi','Nair','Iyer',
+                      'Menon','Rao','Das','Bose','Sen','Choudhury','Banerjee','Mukherjee','Roy','Bhatt',
+                      'Deshmukh','Kulkarni','Patil','Joshi','Sawant','Naik','Pawar','More','Jadhav','Gawande',
+                      'Pillai','Warrier','Kurup','Menon','Nambiar','Chandran','Suresh','Krishnan','Balaji','Rajan',
+                      'Malhotra','Khanna','Sethi','Arora','Mehta','Saxena','Kapoor','Chopra','Bajaj','Anand',
+                      'Thakur','Chand','Kohli','Gill','Dhillon','Sodhi','Saini','Bedi','Kashyap','Bhatia',
+                      'Srinivasan','Subramanian','Venkatesh','Murugan','Sundar','Babu','Selvan','Pandian','Kumaravel','Muthu',
+                      'Varghese','Thomas','George','Philip','Samuel','Daniel','Joseph','Cherian','Jacob','Mathew']
+        departments = ['Computer Science Engineering','Information Technology','Electronics & Communication',
+                       'Electrical Engineering','Mechanical Engineering','Civil Engineering','Biotechnology',
+                       'Data Science','Artificial Intelligence & Machine Learning','Cyber Security']
+        colleges = ['Sathyabama Institute of Science and Technology',
+                    'SRM Institute of Technology','VIT Chennai','Anna University']
+        base_email_student = 'student'
+
+        _existing_student_count = User.query.filter(User.email.like(f'{base_email_student}%')).count()
+
+        if _existing_student_count < 100:
+            # Remove old batch if exists (keep base student)
+            User.query.filter(User.email != 'student@sist.ac.in', User.email.like(f'{base_email_student}%')).delete()
+            db.session.commit()
+
+            from app.utils.generate_participant_id import COLLEGE_CODE_MAP
+            base_serial = User.query.count() + 1
+            students_batch = []
+            for i in range(100):
+                fn = first_names[i % len(first_names)]
+                ln = last_names[i % len(last_names)]
+                dept = departments[i % len(departments)]
+                col = colleges[i % 3]  # keep most in SIST
+                suffix = f'{i+1:03d}'
+                serial = base_serial + i
+                pid = f'SIST-{date.today().year}-{serial:03d}'
+                students_batch.append(User(
+                    name=f'{fn} {ln}', first_name=fn, last_name=ln,
+                    email=f'{base_email_student}{suffix}@sist.ac.in',
+                    password=generate_password_hash('student123'),
+                    role='student',
+                    reg_number=f'SIST2024{suffix}',
+                    department=dept,
+                    college=col,
+                    year_of_study=(i % 4) + 1,
+                    phone=f'+91{9000000000 + i}',
+                    participant_id=pid
+                ))
+            db.session.add_all(students_batch)
+            db.session.flush()
+            student_ids = [s.id for s in students_batch]
+        else:
+            student_ids = [u.id for u in User.query.filter(User.email.like(f'{base_email_student}%')).all()]
+
+        # Ensure base demo student exists
+        if not User.query.filter_by(email='student@sist.ac.in').first():
+            demo_student = User(
+                name='Demo Student', first_name='Demo', last_name='Student',
+                email='student@sist.ac.in',
+                password=generate_password_hash('student123'),
+                role='student',
+                reg_number='SIST2024001',
+                department='Computer Science Engineering',
+                college='Sathyabama Institute of Science and Technology',
+                participant_id=generate_participant_id()
+            )
+            db.session.add(demo_student)
+            db.session.flush()
+            student_ids.append(demo_student.id)
+        else:
+            demo_id = User.query.filter_by(email='student@sist.ac.in').first().id
+            if demo_id not in student_ids:
+                student_ids.append(demo_id)
 
         # Sample events
         if Event.query.count() == 0:
@@ -3503,17 +3595,54 @@ def init_db():
                     tags='AI,machine learning,workshop', max_participants=30,
                     image_url='https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400',
                     organizer_name='Dr. Rajesh Kumar', created_by=org_id),
+                Event(title='Debate Championship', date=date.today() + timedelta(days=7),
+                    time='10:00 AM', venue='Seminar Hall A', category='Cultural',
+                    description='Inter-collegiate debate competition on current affairs.',
+                    tags='debate,competition,public-speaking', max_participants=60,
+                    organizer_name='Dr. Rajesh Kumar', created_by=org_id),
+                Event(title='Photography Exhibition', date=date.today() + timedelta(days=12),
+                    time='11:00 AM', venue='Main Auditorium', category='Cultural',
+                    description='Showcasing the best student photography work.',
+                    tags='photography,exhibition,art',
+                    organizer_name='Admin SIST', created_by=admin_id),
+                Event(title='Coding Contest', date=date.today() + timedelta(days=2),
+                    time='09:00 AM', venue='CS Block Lab', category='Technical',
+                    description='Competitive programming contest with exciting prizes.',
+                    tags='coding,contest,algorithm', max_participants=50,
+                    organizer_name='Dr. Rajesh Kumar', created_by=org_id),
+                Event(title='Robotics Workshop', date=date.today() + timedelta(days=18),
+                    time='01:00 PM', venue='AI Lab', category='Workshop',
+                    description='Build and program your own robot.', max_participants=25,
+                    tags='robotics,workshop,hands-on',
+                    organizer_name='Admin SIST', created_by=admin_id),
+                Event(title='Startup Pitch Fest', date=date.today() + timedelta(days=25),
+                    time='10:00 AM', venue='Conference Room', category='Technical',
+                    description='Pitch your startup idea to industry experts.',
+                    tags='startup,pitch,entrepreneurship', max_participants=40,
+                    organizer_name='Dr. Rajesh Kumar', created_by=org_id),
+                Event(title='Music Band Competition', date=date.today() + timedelta(days=8),
+                    time='05:00 PM', venue='Open Air Theatre', category='Cultural',
+                    description='Battle of the bands — showcase your musical talent.',
+                    tags='music,band,competition', max_participants=100,
+                    organizer_name='Dr. Rajesh Kumar', created_by=org_id),
+                Event(title='Yoga & Wellness Camp', date=date.today() + timedelta(days=14),
+                    time='06:00 AM', venue='Sports Ground', category='Sports',
+                    description='Morning yoga and wellness session for all.',
+                    tags='yoga,wellness,health', max_participants=150,
+                    organizer_name='Admin SIST', created_by=admin_id),
             ]
             for e in sample_events:
                 db.session.add(e)
             db.session.flush()
 
-            # Register student for some events
+            # Register students for events (each student registered for 3-6 random events)
             all_events = Event.query.all()
-            if student_id and all_events:
-                for ev in all_events[:3]:
-                    if not Registration.query.filter_by(user_id=student_id, event_id=ev.id).first():
-                        db.session.add(Registration(user_id=student_id, event_id=ev.id))
+            for sid in student_ids:
+                num_regs = random.randint(3, 6)
+                chosen = random.sample(all_events, min(num_regs, len(all_events)))
+                for ev in chosen:
+                    if not Registration.query.filter_by(user_id=sid, event_id=ev.id).first():
+                        db.session.add(Registration(user_id=sid, event_id=ev.id))
 
             # Sample announcements
             if Announcement.query.count() == 0:
@@ -3524,18 +3653,28 @@ def init_db():
                         created_by=org_id),
                     Announcement(message='AI workshop schedule has been updated. Check event details.',
                         created_by=org_id),
+                    Announcement(message='Hackathon 24H teams can now register in groups of up to 4.',
+                        created_by=admin_id, priority='warning'),
+                    Announcement(message='Sports Day entries closing soon — register now!',
+                        created_by=org_id, priority='urgent'),
+                    Announcement(message='Campus wifi will be under maintenance on Saturday night.',
+                        created_by=admin_id),
+                    Announcement(message='New coding contest added — test your algorithmic skills!',
+                        created_by=org_id),
                 ]
                 for a in sample_ann:
                     db.session.add(a)
 
-            # Sample scores
-            if Score.query.count() == 0 and student_id and all_events:
-                for ev in all_events[:2]:
-                    score = Score(
-                        user_id=student_id, event_id=ev.id,
-                        points=95, reason='First Place - Best Innovation'
-                    )
-                    db.session.add(score)
+            # Sample scores for some students
+            if Score.query.count() == 0 and student_ids and all_events:
+                score_reasons = ['First Place','Second Place','Best Innovation','Outstanding Performance',
+                                 'Perfect Attendance','Best Team Player','Top Scorer','Excellent Presentation']
+                for i, sid in enumerate(student_ids[:30]):  # scores for first 30 students
+                    ev = all_events[i % len(all_events)]
+                    points = random.randint(70, 100)
+                    reason = random.choice(score_reasons)
+                    if not Score.query.filter_by(user_id=sid, event_id=ev.id).first():
+                        db.session.add(Score(user_id=sid, event_id=ev.id, points=points, reason=reason))
 
             # Settings
             if not UserSetting.query.filter_by(user_id=admin_id).first():
@@ -3543,25 +3682,27 @@ def init_db():
             if org_id and not UserSetting.query.filter_by(user_id=org_id).first():
                 db.session.add(UserSetting(user_id=org_id))
 
-        # Sample teams (always check, not inside events block)
+        # Sample teams
         if Team.query.count() == 0:
             team1 = Team(name='Tech Titans', description='Competitive coding team',
                 created_by=org_id or admin_id)
             team2 = Team(name='Innovators Hub', description='Project development team',
                 created_by=admin_id)
-            db.session.add_all([team1, team2])
+            team3 = Team(name='Creative Crew', description='Design and media team',
+                created_by=org_id or admin_id)
+            db.session.add_all([team1, team2, team3])
             db.session.flush()
-            if student_id:
-                from app.models.team import team_members
+            from app.models.team import team_members
+            for i, sid in enumerate(student_ids[:15]):
+                team_id = [team1.id, team2.id, team3.id][i % 3]
                 db.session.execute(team_members.insert().values(
-                    team_id=team1.id, user_id=student_id
-                ))
-                db.session.execute(team_members.insert().values(
-                    team_id=team2.id, user_id=student_id
+                    team_id=team_id, user_id=sid
                 ))
 
         db.session.commit()
+        student_count = User.query.filter_by(role='student').count()
         print("✅ Database initialized with demo data.")
+        print(f"   Students: {student_count}")
         print("   Admin: admin@sist.ac.in / admin123")
         print("   Organizer: organizer@sist.ac.in / organizer123")
         print("   Student: student@sist.ac.in / student123")

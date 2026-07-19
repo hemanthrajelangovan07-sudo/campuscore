@@ -87,8 +87,9 @@
   gap: 12px;
   padding: 12px 16px;
   margin-bottom: 16px;
-  background: var(--maroon);
-  color: #fff;
+  background: var(--maroon-pale);
+  color: var(--text);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   animation: slideDown 0.2s ease;
 }
@@ -100,6 +101,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   white-space: nowrap;
+  color: var(--maroon);
 }
 .bulk-actions {
   display: flex;
@@ -107,16 +109,15 @@
   flex-wrap: wrap;
 }
 .bulk-action-bar .btn {
-  color: #fff;
-  border-color: rgba(255,255,255,0.3);
+  color: var(--text);
+  border-color: var(--border-subtle);
 }
 .bulk-action-bar .btn:hover {
-  background: rgba(255,255,255,0.15);
-  border-color: rgba(255,255,255,0.5);
+  background: rgba(107,31,42,0.08);
 }
 .bulk-action-bar .btn-danger {
   border-color: #ef4444;
-  color: #fca5a5;
+  color: #dc2626;
 }
 .bulk-action-bar .btn-danger:hover {
   background: #dc2626;
